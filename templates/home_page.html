@@ -1,14 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CAFFIEND Home Page</title>
     <style>
         .center-text {
             text-align: center;
         }
+
+        .navbar {
+            display: flex;
+            justify-content: center;    /*center tabs horizontally*/
+            background-color: #0c0246;
+            padding: 10px 0;
+        }
+
+        /* each button */
+        .tab {
+            background-color: #444;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Hover */
+        .tab:hover {
+            background-color: #615f5f;
+        }
+
+        /* Selected tab */
+        .tab.active {
+            background-color: #008CBA;
+        }
     </style>
 </head>
 <body>
-    <p class="center-text">CaffieND!</p>
+    <!-- Top nav bar -->
+    <!-- change "button" to a links once we htmls for those pages-->
+    <div class="navbar"> 
+        <button class="tab active">Home</button> 
+        <button class="tab">Tab1</button>
+        <button class="tab">Tab2</button>
+        <button class="tab">Tab3</button>
+    </div>
+
+    <div style="text-align: center; margin-top: 50px;">
+        <h1>CaffieND!</h1>
+    </div>
 </body>
 </html>
