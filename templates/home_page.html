@@ -62,5 +62,26 @@
     <div style="text-align: center; margin-top: 50px;">
         <h1 class="title">CaffieND!</h1>
     </div>
+
+    <div>
+    	<table border="1">
+		<tr>
+			<th>Name</th>
+			<th>Volume</th>
+			<th>Calories</th>
+			<th>Caffeine Amount</th>
+			<th>Caffeine Type</th>
+		</tr>
+		{% for drink in drinks %}
+		<tr>
+			<td>{{ drink.name }}</td>
+			<td>{{ drink.volume }}</td>
+			<td>{{ drink.calories }}</td>
+			<td>{{ drink.caffeine_amt }}</td>
+			<td>{{ drink.caffeine_type }}</td>
+		</tr>
+		{% endfor %}
+	</table>
+    </div>
 </body>
 </html>
