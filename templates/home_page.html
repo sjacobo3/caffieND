@@ -1,66 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CAFFIEND Home Page</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
-    <style>
-	body {
-	    margin: 0 auto; 
-	}
-        .title {
-            font-size: 60px;
-            font-weight: bold;
-            text-align: center;
-            color: #222;
-            font-family: 'Dancing Script', cursive;
-        }
+{% extends "base.html" %}
 
-        .navbar {
-            display: flex;
-            justify-content: center;    /*center tabs horizontally*/
-            background-color: #0c0246;
-            padding: 10px 0;
-        }
+{% block title %}Home{% endblock %}
 
-        /* each button */
-        .tab {
-            background-color: #ab0a43;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            margin: 0 5px;
-            cursor: pointer;
-            border-radius: 6px;
-            font-size: 16px;
-            font-family: cursive;
-            transition: background-color 0.3s ease;
-        }
+{% block content %}
+<div style="text-align: center; margin-top: 50px;">
+	<h1 class="title">CaffieND!</h1>
+</div>
 
-        /* Hover */
-        .tab:hover {
-            background-color: #c11d51;
-        }
-
-        /* Selected tab */
-        .tab.active {
-            background-color: #008CBA;
-        }
-    </style>
-</head>
-<body>
-    <!-- Top nav bar -->
-    <!-- change "button" to a links once we htmls for those pages-->
-    <div class="navbar"> 
-        <button class="tab active">Home</button> 
-        <button class="tab">Tab1</button>
-        <button class="tab">Tab2</button>
-        <button class="tab">Tab3</button>
+<div class="row justify-content-center">
+    {% for drink in drinks %}
+    <div class="col-12 col-sm-6 col-md-3 mb-4">
+	<div class="card shadow-sm border-0 h-100">
+	    <div class="card-body">
+		<h5 class="card-title">{{ drink.name }}<//p>
+		<p class="card-text mb-1"><strong>Volume:</strong> {{ drink.volume }}</p>
+		<p class="card-text mb-1"><strong>Calories:</strong> {{ drink.calories }}</p>
+		<p class="card-text mb-1"><strong>Amount:</strong> {{ drink.caffeine_amt }}</p>
+		<p class="card-text mb-1"><strong>Type:</strong> {{ drink.caffeine_type }}</p>
+  	    </div>
+	</div>
     </div>
-
-    <div style="text-align: center; margin-top: 50px;">
-        <h1 class="title">CaffieND!</h1>
-    </div>
-</body>
-</html>
+    {% endfor %}
+</div>
+{% endblock %}

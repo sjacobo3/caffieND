@@ -1,0 +1,44 @@
+body {
+	margin: 0 auto;
+}
+.title {
+	font-size: 60px;
+	font-weight: bold;
+	text-align: center;
+	color: #222;
+	font-family: 'Dancing Script', cursive;
+}
+
+.navbar {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: #0c0246;	
+	padding: 12px 0;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.tab {
+	display: inline-block;
+	background-color: #ab0a43;
+	color: white;
+	padding: 8px 10px;	
+	margin: 0 8px;
+	border-radius: 8px;
+	font-size: 18px;
+	text-decoration: none;
+	transition: all 0.3s ease;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.tab:hover {
+	background-color: #d2185b;
+	transform: translateY(-3px);
+	box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.tab.active {
+	background-color: #ff2a6d;
+	box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+	transform: translateY(-2px);
+}
