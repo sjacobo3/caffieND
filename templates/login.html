@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div style="text-align: center; margin-top: 50px;">
+	<h1 class="title">Login</h1>
+</div>
+
+<div class="row justify-content-center">
+    <form method="POST" action="/login">
+        <label>Username:</label><br>
+        <input type="text" name="username" required><br>
+
+        <label>Password:</label><br>
+        <input type="password" name="password" required><br>
+
+        <button type="submit">Login</button>
+    </form>
+    <a href="{{ url_for('register') }}">Don't have an account? Register</a>
+</div>
+{% endblock %}

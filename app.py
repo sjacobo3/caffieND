@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 import os
 
@@ -24,6 +25,16 @@ class Drink(db.Model):
     def __repr__(self):
         return f"<Drink {self.name}>"
 
+class Users(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(50), nullable=False)
+    password = db.Column(db.String(30), nullable=False)
+
+    def __repr__(self):
+        return f"<User {self.username}"        
+
 
 @app.route("/")
 def home():
@@ -38,6 +49,62 @@ def leaderboard():
 def recommendation():
     return render_template('recommend.html', active_tab='recommendation')
 
+@app.route("/accounts")
+def accounts():
+    return render_template('accounts.html', active_tab='accounts')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        
+        # check if username or email already exists
+        existing_user = Users.query.filter((Users.username==username) | (Users.email==email)).first() 
+        if existing_user:
+            flash("Username or email already exists.")
+            return redirect(url_for('register'))
+        
+        # hash each new password so it is unique and save
+        hashed_pw = generate_password_hash(password, method='sha256')
+        new_user = Users(username=username, email=email, password=hashed_pw)
+
+        # add and commit to database
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash("Account created successfully! Please log in.")
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        user = Users.query.filter_by(username=username).first()
+
+        if user and check_password_hash(user.password, password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            flash(f"Welcome, {user.username}")
+            return redirect(url_for('home_page'))
+        else:
+            flash("Invalid username or password.")
+            return redirect(url_for('login'))
+        
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    # clear session data to log the user out
+    session.clear()
+    flash("You have been logged out.")
+    return redirect(url_for('accounts'))
+
 if __name__ == '__main__':
     app.debug = True
-    app.run(host='0.0.0.0', port=5028)
+    app.run(host='0.0.0.0', port=5030)
