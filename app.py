@@ -27,8 +27,15 @@ class Drink(db.Model):
 
 @app.route("/")
 def home():
-    drinks = Drink.query.all()
-    return render_template('home_page.html', drinks=drinks, active_tab='home')
+    # pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+
+    pagination = Drink.query.paginate(page=page, per_page=per_page, error_out=False)
+
+    items = pagination.items
+
+    return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination)
 
 @app.route("/leaderboard")
 def leaderboard():
@@ -40,4 +47,4 @@ def recommendation():
 
 if __name__ == '__main__':
     app.debug = True
-    app.run(host='0.0.0.0', port=5028)
+    app.run(host='0.0.0.0', port=5029)
