@@ -38,15 +38,15 @@ def home():
 
     if userinput_query: 
         if userinput_category == 'name':
-            drinks = drinks.filter(func.lower(Drink.name).contains(userinput_query.lower())).all()
+            drinks = drinks.filter(func.lower(Drink.name).contains(userinput_query.lower()))
         elif userinput_category == 'calories': 
             if userinput_query.isdigit():
-                drinks = drinks.filter(Drink.calories == int(userinput_query)).all()
+                drinks = drinks.filter(Drink.calories == int(userinput_query))
             else: 
                 drinks = drinks.filter(False)
         elif userinput_category == 'caffeine_amt': 
             if userinput_query.isdigit(): 
-                drinks = drinks.filter(Drink.caffeine_amt == int(userinput_query)).all()
+                drinks = drinks.filter(Drink.caffeine_amt == int(userinput_query))
             else: 
                 drinks = drinks.filter(False)
         else:
@@ -56,8 +56,7 @@ def home():
     page = request.args.get('page', 1, type=int)
     per_page = 20
 
-    pagination = Drink.query.paginate(page=page, per_page=per_page, error_out=False)
-
+    pagination = drinks.paginate(page=page, per_page=per_page, error_out=False)
     items = pagination.items
 
     return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination, query=userinput_query, category=userinput_category)
