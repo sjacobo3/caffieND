@@ -54,6 +54,15 @@ def home():
         
     return render_template('home_page.html', drinks=drinks, active_tab='home', query=userinput_query, category=userinput_category)
 
+    # pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+
+    pagination = Drink.query.paginate(page=page, per_page=per_page, error_out=False)
+
+    items = pagination.items
+
+    return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination)
 
 @app.route("/leaderboard")
 def leaderboard():
