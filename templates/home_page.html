@@ -7,6 +7,27 @@
 	<h1 class="title">CaffieND!</h1>
 </div>
 
+<form action="/" method="GET" class="mb-4">
+    <div class="input-group">
+          <select class="form-select" name="category">
+            <option value="name" {% if request.args.get('category') == 'name' %} selected {% endif %}>Name</option>
+            <option value="calories" {% if request.args.get('category') == 'calories' %} selected {% endif %}>Calories</option>
+            <option value="caffeine_amt" {% if request.args.get('category') == 'caffeine_amt' %} selected {% endif %}>Caffeine Amount</option>
+        </select>
+
+        <input 
+            type="text" 
+            class="form-control" 
+            name="name" 
+            placeholder="Search for a drink..."
+            value="{{ request.args.get('name', '') }}"
+        >
+        <button class="btn btn-primary" type="submit">Search</button>
+    </div>
+</form>
+
+
+
 <div class="row justify-content-center">
     {% for drink in drinks %}
     <div class="col-12 col-sm-6 col-md-3 mb-4">

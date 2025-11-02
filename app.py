@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 import os
+from sqlalchemy import func
+
 
 app = Flask(__name__)
 
@@ -27,6 +29,31 @@ class Drink(db.Model):
 
 @app.route("/")
 def home():
+    #get user inputs for search 
+    userinput_query = request.args.get('name', None)
+    userinput_category = request.args.get('category', 'name')
+
+    #get all drink data 
+    drinks = Drink.query
+
+    if userinput_query: 
+        if userinput_category == 'name':
+            drinks = drinks.filter(func.lower(Drink.name).contains(userinput_query.lower())).all()
+        elif userinput_category == 'calories': 
+            if userinput_query.isdigit():
+                drinks = drinks.filter(Drink.calories == int(userinput_query)).all()
+            else: 
+                drinks = drinks.filter(False)
+        elif userinput_category == 'caffeine_amt': 
+            if userinput_query.isdigit(): 
+                drinks = drinks.filter(Drink.caffeine_amt == int(userinput_query)).all()
+            else: 
+                drinks = drinks.filter(False)
+        else:
+            drinks = drinks.filter(False)
+        
+    return render_template('home_page.html', drinks=drinks, active_tab='home', query=userinput_query, category=userinput_category)
+
     # pagination
     page = request.args.get('page', 1, type=int)
     per_page = 20
@@ -44,6 +71,7 @@ def leaderboard():
 @app.route("/recommendation")
 def recommendation():
     return render_template('recommend.html', active_tab='recommendation')
+
 
 if __name__ == '__main__':
     app.debug = True
