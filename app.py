@@ -51,8 +51,6 @@ def home():
                 drinks = drinks.filter(False)
         else:
             drinks = drinks.filter(False)
-        
-    return render_template('home_page.html', drinks=drinks, active_tab='home', query=userinput_query, category=userinput_category)
 
     # pagination
     page = request.args.get('page', 1, type=int)
@@ -62,7 +60,7 @@ def home():
 
     items = pagination.items
 
-    return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination)
+    return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination, query=userinput_query, category=userinput_category)
 
 @app.route("/leaderboard")
 def leaderboard():
