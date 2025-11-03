@@ -16,7 +16,20 @@
 	<a href="{{ url_for('home') }}" class="tab {% if active_tab == 'home' %}active{% endif %}">Home</a> 
 	<a href="{{ url_for('leaderboard') }}" class="tab {% if active_tab == 'leaderboard' %}active{% endif %}">Leaderboard</a>
 	<a href="{{ url_for('recommendation') }}" class="tab {% if active_tab == 'recommendation' %}active{% endif %}">Recommendations</a>
-    <a href="{{ url_for('accounts') }}" class="tab {% if active_tab == 'accounts' %}active{% endif %}">Accounts</button>
+    <a href="{{ url_for('accounts') }}" class="tab {% if active_tab == 'accounts' %}active{% endif %}">Accounts</a>
+    </div>
+
+    <!-- create flash messages -->
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for message in messages %}
+                        <li class="alert alert-info">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
     </div>
 
     <!-- main content -->
