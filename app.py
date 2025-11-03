@@ -38,7 +38,6 @@ class Users(db.Model):
     def __repr__(self):
         return f"<User {self.username}"        
 
-
 @app.route("/")
 def home():
     #get user inputs for search 
@@ -136,6 +135,35 @@ def logout():
     session.clear()
     flash("You have been logged out.")
     return redirect(url_for('accounts'))
+
+@app.route('/password', methods=['GET', 'POST'])
+def password():
+    if request.method == 'POST':
+        user = Users.query.get(session['user_id'])
+
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+
+        # verify if current password is correct
+        if not check_password_hash(user.password, current_password):
+            flash("Current password is incorrect.")
+            return redirect(url_for('password'))
+        
+        # verify if new passwords match
+        if new_password != confirm_password:
+            flash("New passwords do not match.")
+            return redirect(url_for('password'))
+
+        # hash new password so it is unique and update
+        hashed_pw = generate_password_hash(new_password, method='sha256')
+        user.password = hashed_pw
+        db.session.commit()
+
+        flash("Your password has been changed successfully!")
+        return redirect(url_for('home'))
+
+    return render_template('password.html')
 
 if __name__ == '__main__':
     app.debug = True
