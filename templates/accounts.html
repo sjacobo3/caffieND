@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Accounts{% endblock %}
+
+{% block content %}
+<div style="text-align: center; margin-top: 50px;">
+	<h1 class="title">Accounts</h1>
+</div>
+
+<div class="justify-content-center">
+{% if 'user_id' in session %}
+    <!-- user logged in already show the log out button-->
+    <p>Welcome, {{ session['username'] }}!</p>
+    <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+{% else %}
+    <a href="{{ url_for('register') }}" class="tab">Register New User</a> 
+	<a href="{{ url_for('login') }}" class="tab">Login</a>
+{% endif %}
+</div>
+{% endblock %}
