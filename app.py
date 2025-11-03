@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 import os
+from sqlalchemy import func
+
 
 app = Flask(__name__)
 
@@ -39,8 +41,37 @@ class Users(db.Model):
 
 @app.route("/")
 def home():
-    drinks = Drink.query.all()
-    return render_template('home_page.html', drinks=drinks, active_tab='home')
+    #get user inputs for search 
+    userinput_query = request.args.get('name', None)
+    userinput_category = request.args.get('category', 'name')
+
+    #get all drink data 
+    drinks = Drink.query
+
+    if userinput_query: 
+        if userinput_category == 'name':
+            drinks = drinks.filter(func.lower(Drink.name).contains(userinput_query.lower()))
+        elif userinput_category == 'calories': 
+            if userinput_query.isdigit():
+                drinks = drinks.filter(Drink.calories == int(userinput_query))
+            else: 
+                drinks = drinks.filter(False)
+        elif userinput_category == 'caffeine_amt': 
+            if userinput_query.isdigit(): 
+                drinks = drinks.filter(Drink.caffeine_amt == int(userinput_query))
+            else: 
+                drinks = drinks.filter(False)
+        else:
+            drinks = drinks.filter(False)
+
+    # pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+
+    pagination = drinks.paginate(page=page, per_page=per_page, error_out=False)
+    items = pagination.items
+
+    return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination, query=userinput_query, category=userinput_category)
 
 @app.route("/leaderboard")
 def leaderboard():
