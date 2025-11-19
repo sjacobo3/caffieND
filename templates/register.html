@@ -4,10 +4,10 @@
 
 {% block content %}
 <div style="text-align: center; margin-top: 50px;">
-	<h1 class="title">Create an Account</h1>
+    <h1 class="title">Create an Account</h1>
 </div>
 
-<div class="justify-content-center">
+<div>
     <form method="POST" action="/register">
         <label>Username:</label><br>
         <input type="text" name="username" required><br>
@@ -20,8 +20,9 @@
 
         <button type="submit" class="btn btn-primary">Register</button>
     </form>
-<div class="mt-3">
-    <a href="{{ url_for('login')}}">Already have an account? Log in</a>
+    <div class="mt-3">
+        <a href="{{ url_for('login')}}">Already have an account? Log in</a>
+    </div>
 </div>
 
 {% endblock %}
