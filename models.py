@@ -4,7 +4,6 @@ from enum import Enum
 from datetime import datetime, timezone
 import os
 
-
 app = Flask(__name__)
 
 # DATABASE CONFIGURATION
@@ -17,8 +16,8 @@ db = SQLAlchemy(app)
 
 
 # MODELS
-class Drink(db.Model):
-    __tablename__ = 'drink'
+class Drinks(db.Model):
+    __tablename__ = 'drinks'
     name = db.Column(db.String(50), primary_key=True)
     volume = db.Column(db.Integer)
     calories = db.Column(db.Integer)
