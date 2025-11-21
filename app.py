@@ -52,7 +52,7 @@ def home():
             drinks = drinks.filter(func.lower(Drinks.name).contains(userinput_query.lower()))
         elif userinput_category == 'calories': 
             if userinput_query.isdigit():
-                drinks = drinks.filter(Drink.calories == int(userinput_query))
+                drinks = drinks.filter(Drinks.calories == int(userinput_query))
             else: 
                 drinks = drinks.filter(False)
         elif userinput_category == 'caffeine_amt': 

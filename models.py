@@ -1,7 +1,8 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from enum import Enum
+from datetime import datetime, timezone
 import os
-
 
 app = Flask(__name__)
 
@@ -34,4 +35,25 @@ class Users(db.Model):
     password = db.Column(db.String(255), nullable=False)
 
     def __repr__(self):
-        return f"<User {self.username}"        
+        return f"<User {self.username}"
+
+class GenderEnum(Enum):
+    MALE = "male"
+    FEMALE = "female"
+    OTHER = "other"
+
+class User_Details(db.Model):
+    __tablename__ = 'user_details'
+    user_id = db.Column(db.Integer, primary_key=True)
+    age = db.Column(db.Integer)
+    gender = db.Column(db.Enum(GenderEnum))
+    weight = db.Column(db.Numeric(5, 2))
+    caffeine_max = db.Column(db.Integer)
+
+class Drink_Ratings(db.Model):
+    __tablename__ = 'drink_ratings'
+    rating_id = db.Column(db.Integer, primary_key=True)
+    drink_id = db.Column(db.Integer)
+    user_id = db.Column(db.Integer)
+    rating = db.Column(db.SmallInteger)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
