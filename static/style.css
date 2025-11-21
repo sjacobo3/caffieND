@@ -42,3 +42,9 @@ body {
 	box-shadow: 0 6px 12px rgba(0,0,0,0.4);
 	transform: translateY(-2px);
 }
+
+.leaderboard-header {
+    background-color: #ab0a43 !important;
+    color: white !important;
+}
+

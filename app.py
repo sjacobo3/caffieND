@@ -17,8 +17,8 @@ app.config['SECRET_KEY'] = os.urandom(24) # generate a random 24 byte string for
 db = SQLAlchemy(app)
 
 # MODELS
-class Drink(db.Model):
-    __tablename__ = 'drink'
+class Drinks(db.Model):
+    __tablename__ = 'drinks'
     name = db.Column(db.String(50), primary_key=True)
     volume = db.Column(db.Integer)
     calories = db.Column(db.Integer)
@@ -45,11 +45,11 @@ def home():
     userinput_category = request.args.get('category', 'name')
 
     #get all drink data 
-    drinks = Drink.query
+    drinks = Drinks.query
 
     if userinput_query: 
         if userinput_category == 'name':
-            drinks = drinks.filter(func.lower(Drink.name).contains(userinput_query.lower()))
+            drinks = drinks.filter(func.lower(Drinks.name).contains(userinput_query.lower()))
         elif userinput_category == 'calories': 
             if userinput_query.isdigit():
                 drinks = drinks.filter(Drink.calories == int(userinput_query))
@@ -57,7 +57,7 @@ def home():
                 drinks = drinks.filter(False)
         elif userinput_category == 'caffeine_amt': 
             if userinput_query.isdigit(): 
-                drinks = drinks.filter(Drink.caffeine_amt == int(userinput_query))
+                drinks = drinks.filter(Drinks.caffeine_amt == int(userinput_query))
             else: 
                 drinks = drinks.filter(False)
         else:
