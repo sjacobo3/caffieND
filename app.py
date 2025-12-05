@@ -132,6 +132,32 @@ def password():
 
     return render_template('password.html')
 
+@app.route('/update_profile', methods=['GET', 'POST'])
+def update_profile():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        
+        # check if username or email already exists
+        existing_user = Users.query.filter((Users.username==username) | (Users.email==email)).first() 
+        if existing_user:
+            flash("Username or email already exists.")
+            return redirect(url_for('register'))
+        
+        # hash each new password so it is unique and save
+        hashed_pw = generate_password_hash(password, method='sha256')
+        new_user = Users(username=username, email=email, password=hashed_pw)
+
+        # add and commit to database
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash("Account created successfully! Please log in.")
+        return redirect(url_for('login'))
+
+    return render_template('profile.html')
+
 if __name__ == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=5031)
