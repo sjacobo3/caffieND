@@ -38,16 +38,16 @@ class Users(db.Model):
         return f"<User {self.username}"
 
 class GenderEnum(Enum):
-    MALE = "male"
-    FEMALE = "female"
-    OTHER = "other"
+    male = "male"
+    female = "female"
+    other = "other"
 
 class User_Details(db.Model):
     __tablename__ = 'user_details'
-    user_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     age = db.Column(db.Integer)
     gender = db.Column(db.Enum(GenderEnum))
-    weight = db.Column(db.Numeric(5, 2))
+    weight = db.Column(db.Numeric(10, 2))
     caffeine_max = db.Column(db.Integer)
 
 class Drink_Ratings(db.Model):

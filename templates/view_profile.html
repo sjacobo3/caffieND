@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}View Profile{% endblock %}
+
+{% block content %}
+<div style="text-align: center; margin-top: 50px;">
+    <h1 class="title">View Profile</h1>
+</div>
+
+<div class="d-flex justify-content-center mt-4">
+    <div>
+        {% if user_details %}
+        <table class="table table-bordered table-striped w-auto">
+            <tbody>
+                <tr>
+                    <th scope="row" class="px-4">Age</th>
+                    <td class="px-4">{{ user_details.age }}</td>
+                </tr>
+                <tr>
+                    <th scope="row" class="px-4">Gender</th>
+                    <td class="px-4">{{ user_details.gender.value.title() }}</td>
+                </tr>
+                <tr>
+                    <th scope="row" class="px-4">Weight (lbs)</th>
+                    <td class="px-4">{{ "%.2f"|format(user_details.weight) }}</td>
+                </tr>
+            </tbody>
+        </table>
+        {% else %}
+            <p class="text-center mb-3">Add profile.</p>
+        {% endif %}
+
+        <div class="text-center">
+            <a href="{{ url_for('update_profile') }}" class="btn btn-danger">Update Profile</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
