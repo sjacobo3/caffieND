@@ -3,20 +3,20 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<div style="text-align: center; margin-top: 50px;">
-	<h1 class="title">Login</h1>
-</div>
+<div class="card p-4 mx-auto" style="text-align: center; margin-top: 50px; max-width: 500px;">
+    <h1 class="title">Login</h1>
 
-<div class="justify-content-center">
-    <form method="POST" action="/login">
-        <label>Username:</label><br>
-        <input type="text" name="username" required><br>
+    <div class="form-container">
+        <form method="POST" action="/login">
+            <label>Username:</label><br>
+            <input type="text" name="username" required><br>
 
-        <label>Password:</label><br>
-        <input type="password" name="password" required><br>
+            <label>Password:</label><br>
+            <input type="password" name="password" required><br>
 
-        <button type="submit">Login</button>
-    </form>
-    <a href="{{ url_for('register') }}">Don't have an account? Register</a>
+            <button class="btn btn-primary mt-3" type="submit">Login</button>
+        </form>
+    </div>
+    <a class="mt-3" href="{{ url_for('register') }}">Don't have an account? Register</a>
 </div>
 {% endblock %}
