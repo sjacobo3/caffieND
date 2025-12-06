@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 import os
 from sqlalchemy import func
-from models import Drinks, Users, User_Details, app, db
+from models import Drinks, Users, User_Details, GenderEnum, app, db
 
 @app.route("/")
 def home():
@@ -134,7 +134,19 @@ def password():
 
 @app.route('/view_profile')
 def view_profile():
-    return render_template('view_profile.html')
+    user_id = session.get('user_id')
+
+    user_details = None # initially no profile information
+
+    # if user is not logged in, redirect to login
+    if not user_id:
+        flash('Please log in to view profile.')
+        return redirect(url_for('login'))
+    
+    # user in logged in, get their profile
+    user_details = User_Details.query.filter_by(user_id=user_id).first()
+    
+    return render_template('view_profile.html', user_details=user_details)
 
 @app.route('/update_profile', methods=['GET', 'POST'])
 def update_profile():
@@ -142,18 +154,35 @@ def update_profile():
 
     if not user_id:
         flash('Please log in to update profile.')
-        return redirect(url_for('accounts'))
+        return redirect(url_for('login'))
 
     if request.method == 'POST':
-        user = Users.query.get(user_id)
-        age = request.form['age']
-        gender = request.form['gender']
-        weight = request.form['weight']
-        
-        update_user = User_Details(user_id=user.id, age=age, gender=gender, weight=weight)
+        age = request.form['age'].strip()
+        gender_input = request.form['gender']
+        weight = request.form.get("weight", "").strip()
 
-        # add and commit to database
-        db.session.add(update_user)
+        # limit weight to 10 digits (8 entered + 2 decimals)
+        weight_digits = weight.lstrip('0') # strip leading zeros
+    
+        if len(weight_digits) > 8:
+            flash("Invalid entry: weight cannot exceed 8 digits")
+            return redirect(url_for('update_profile'))
+        
+        weight = float(weight)
+        
+        # check if the user already has information
+        user_details = User_Details.query.filter_by(user_id=user_id).first()
+
+        if user_details: # if their profile exists and they are entering new information, update it
+            user_details.age = age
+            user_details.gender = GenderEnum(gender_input).value
+            user_details.weight = weight
+
+        else: # if their profile does not exist, add profile information
+            user_details = User_Details(user_id=user_id, age=age, gender=GenderEnum(gender_input).value, weight=weight)
+            db.session.add(user_details) # add only for inserting a new row
+
+        # commit to database
         db.session.commit()
 
         flash("Profile Successfully Updated.")
