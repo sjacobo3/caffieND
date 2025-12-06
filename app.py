@@ -5,6 +5,7 @@ import os
 from models import Drinks, Users, User_Details, GenderEnum, app, db
 from sqlalchemy import func, desc 
 from datetime import datetime, timezone
+from functools import wraps
 
 
 app = Flask(__name__)
@@ -51,6 +52,15 @@ class Drink_Ratings(db.Model):
     user_id = db.Column(db.Integer)
     rating = db.Column(db.SmallInteger)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return wrapper
 
 
 @app.route("/")
@@ -181,12 +191,17 @@ def leaderboard():
 
 
 @app.route("/recommendation")
+@login_required
 def recommendation():
     return render_template('recommend.html', active_tab='recommendation')
 
 @app.route("/accounts")
+@login_required
 def accounts():
-    return render_template('accounts.html', active_tab='accounts')
+    user_id = session.get('user_id')
+    user_details = User_Details.query.filter_by(user_id=user_id).first()
+
+    return render_template('accounts.html', active_tab='accounts', user_details=user_details)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -269,23 +284,8 @@ def password():
 
     return render_template('password.html')
 
-@app.route('/view_profile')
-def view_profile():
-    user_id = session.get('user_id')
-
-    user_details = None # initially no profile information
-
-    # if user is not logged in, redirect to login
-    if not user_id:
-        flash('Please log in to view profile.')
-        return redirect(url_for('login'))
-    
-    # user in logged in, get their profile
-    user_details = User_Details.query.filter_by(user_id=user_id).first()
-    
-    return render_template('view_profile.html', user_details=user_details)
-
 @app.route('/update_profile', methods=['GET', 'POST'])
+@login_required
 def update_profile():
     user_id = session.get('user_id')
 
@@ -293,39 +293,44 @@ def update_profile():
         flash('Please log in to update profile.')
         return redirect(url_for('login'))
 
+    # fetch data if exists
+    user_details = User_Details.query.filter_by(user_id=user_id).first()
+
     if request.method == 'POST':
         age = request.form['age'].strip()
         gender_input = request.form['gender']
         weight = request.form.get("weight", "").strip()
 
-        # limit weight to 10 digits (8 entered + 2 decimals)
-        weight_digits = weight.lstrip('0') # strip leading zeros
-    
+        weight_digits = weight.lstrip('0')
         if len(weight_digits) > 8:
             flash("Invalid entry: weight cannot exceed 8 digits")
             return redirect(url_for('update_profile'))
-        
-        weight = float(weight)
-        
-        # check if the user already has information
-        user_details = User_Details.query.filter_by(user_id=user_id).first()
 
-        if user_details: # if their profile exists and they are entering new information, update it
+        weight = float(weight)
+
+        if user_details:
             user_details.age = age
             user_details.gender = GenderEnum(gender_input).value
             user_details.weight = weight
+        else:
+            user_details = User_Details(
+                user_id=user_id,
+                age=age,
+                gender=GenderEnum(gender_input).value,
+                weight=weight
+            )
+            db.session.add(user_details)
 
-        else: # if their profile does not exist, add profile information
-            user_details = User_Details(user_id=user_id, age=age, gender=GenderEnum(gender_input).value, weight=weight)
-            db.session.add(user_details) # add only for inserting a new row
-
-        # commit to database
         db.session.commit()
 
         flash("Profile Successfully Updated.")
         return redirect(url_for('accounts'))
 
-    return render_template('update_profile.html')
+    return render_template('update_profile.html', user_details=user_details)
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db.session.remove()
 
 if __name__ == '__main__':
     app.debug = True
