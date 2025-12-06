@@ -115,6 +115,7 @@ def leaderboard():
         ).order_by(
             desc('avg_rating')
         ).limit(10).all()
+
     elif category == 'coffee':
         top_drinks = db.session.query(
             Drink_Ratings.drink_id,
@@ -170,19 +171,40 @@ def leaderboard():
         ).order_by(
             desc('avg_rating')
         ).limit(10).all()
+
+    elif category == 'brands':
+            top_drinks = db.session.query(
+                Drinks.brand,
+                func.avg(Drink_Ratings.rating).label('avg_rating')
+            ).join(
+                Drinks, Drinks.drink_id == Drink_Ratings.drink_id 
+            ).group_by(
+                Drinks.brand
+            ).order_by(
+                desc('avg_rating')
+            ).limit(10).all()
+
     else:
         top_drinks = []
    
-    # Get full drink objects for display (similar to home page)
     leaderboard_data = []
-    for rank, (drink_id, avg_rating) in enumerate(top_drinks, start=1):
-        drink = Drinks.query.get(drink_id)  # get() works since name is the primary key
-        if drink:
+    if category != "brands":
+        for rank, (drink_id, avg_rating) in enumerate(top_drinks, start=1):
+            drink = Drinks.query.get(drink_id)
+            if drink:
+                leaderboard_data.append({
+                    'rank': rank,
+                    'drink': drink, 
+                    'avg_rating': round(avg_rating, 2)
+                })
+    else: 
+        for rank, (brand, avg_rating) in enumerate(top_drinks, start = 1):
             leaderboard_data.append({
-                'rank': rank,
-                'drink': drink,  # Full drink object like home page
+                'rank': rank, 
+                'brand' : brand,
                 'avg_rating': round(avg_rating, 2)
             })
+
    
     return render_template('leaderboard.html',
                          active_tab='leaderboard',
@@ -334,4 +356,4 @@ def shutdown_session(exception=None):
 
 if __name__ == '__main__':
     app.debug = True
-    app.run(host='0.0.0.0', port=5030)
+    app.run(host='0.0.0.0', port=5031)
