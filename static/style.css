@@ -48,3 +48,25 @@ body {
     color: white !important;
 }
 
+.caffeine-card {
+    width: 30%;
+    margin-left: auto;    
+    margin-right: 0;
+    padding: 40px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+	display: flex;
+  	flex-direction: column; /* Stacks content and actions vertically */
+  	justify-content: space-between; /* Pushes actions to the bottom */
+}
+
+.card-actions {
+  margin-top: auto; /* Pushes the actions div to the bottom */
+  text-align: center; /* Centers the button horizontally */
+}
+
+.card-content {
+	text-align: center;
+	font-size: 30px;
+}
+
+
