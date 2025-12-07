@@ -29,7 +29,8 @@ class Drinks(db.Model):
     volume = db.Column(db.Integer)
     calories = db.Column(db.Integer)
     caffeine_amt = db.Column(db.Integer)
-    caffeine_type = db.Column(db.String(15))
+    category = db.Column(db.String(50))
+    sugar_g = db.Column(db.Integer)
 
     def __repr__(self):
         return f"<Drink {self.name}>"
@@ -123,7 +124,7 @@ def leaderboard():
         ).join(
             Drinks, Drinks.drink_id == Drink_Ratings.drink_id 
         ).filter(
-            Drinks.caffeine_type == 'Coffee'
+            Drinks.category == 'Coffee'
         ).group_by(
             Drink_Ratings.drink_id
         ).order_by(
@@ -137,7 +138,7 @@ def leaderboard():
         ).join(
           Drinks, Drinks.drink_id == Drink_Ratings.drink_id
         ).filter(
-            Drinks.caffeine_type == 'Tea'
+            Drinks.category == 'Tea'
         ).group_by(
             Drink_Ratings.drink_id
         ).order_by(
@@ -151,7 +152,7 @@ def leaderboard():
         ).join(
           Drinks, Drinks.drink_id == Drink_Ratings.drink_id
         ).filter(
-            Drinks.caffeine_type == 'Energy'
+            Drinks.category == 'Energy'
         ).group_by(
             Drink_Ratings.drink_id
         ).order_by(
@@ -165,7 +166,7 @@ def leaderboard():
         ).join(
             Drinks, Drinks.drink_id == Drink_Ratings.drink_id 
         ).filter(
-            Drinks.caffeine_type == 'Water'
+            Drinks.category == 'Water'
         ).group_by(
             Drink_Ratings.drink_id
         ).order_by(
@@ -213,7 +214,7 @@ def leaderboard():
 
 
 @app.route("/recommendation")
-@login_required
+# @login_required
 def recommendation():
     return render_template('recommend.html', active_tab='recommendation')
 
@@ -356,4 +357,4 @@ def shutdown_session(exception=None):
 
 if __name__ == '__main__':
     app.debug = True
-    app.run(host='0.0.0.0', port=5031)
+    app.run(host='0.0.0.0', port=5030)
