@@ -222,7 +222,7 @@ def leaderboard():
 
 
 @app.route("/recommendation")
-# @login_required
+@login_required
 def recommendation():
     # get user inputs for search 
     category = request.args.get('category')
