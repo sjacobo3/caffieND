@@ -3,4 +3,83 @@
 {% block title %}Recommendations{% endblock %}
 
 {% block content %}
-{% endblock %}
+
+
+<div style="text-align: center; margin-top: 50px;">
+	<h1 class="title">Recommendations</h1>
+</div>
+
+
+<div class="card caffeine-card p-4 shadow-sm border-0">
+
+    <h5 class="card-title mb-3">What is my Caffeine Limit Today?</h5>
+    <div class="card-actions">
+    <form method="GET" action="/recommendation">
+        <button type="submit" name="show" value="1" class="btn btn-primary">
+            Calculate My Safe Limit
+        </button>
+    </form>
+    </div>
+
+    {% if show_limit and user_details %}
+        <hr>
+        <p class="card-content">
+            <strong>{{ user_details.caffeine_max }}</strong> mg
+        </p>
+    {% endif %}
+
+</div>
+
+
+<form action="/recommendation" method="GET" class="mb-4">
+    <div class="input-group">
+          <select class="form-select" name="category">
+            <option value="coffee" {% if category == 'coffee' %} selected {% endif %}>Coffee ☕</option>
+            <option value="tea" {% if category == 'tea' %} selected {% endif %}>Tea 🍵</option>
+            <option value="energy" {% if category == 'energy' %} selected {% endif %}>Energy ⚡</option>
+			<option value="water" {% if category == 'water' %} selected {% endif %}>Water 💧</option>
+        </select>
+
+        <select class="form-select" name="timeofday">
+            <option value="morning"  {% if category == 'morning' %} selected {% endif %}>Morning 🌅</option>
+            <option value="afternoon" {% if category == 'afternoon' %} selected {% endif %}>Afternoon ☀️</option>
+            <option value="night" {% if category == 'night' %} selected {% endif %}>Night 🌙</option>
+        </select>
+
+        <input 
+            type="text" 
+            class="form-control" 
+            name="name" 
+            placeholder="How many Calories?"
+            value="{{ request.args.get('amount', '') }}"
+        >
+        <button class="btn btn-primary" type="submit">Search</button>
+    </div>
+</form>
+
+<div class="row justify-content-center">
+    {% for drink in recommendation %}
+    <div class="col-12 col-sm-6 col-md-3 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ drink.name }}</h5>
+                <p class="card-text mb-1"><strong>Volume:</strong> {{ drink.volume }}</p>
+                <p class="card-text mb-1"><strong>Calories:</strong> {{ drink.calories }}</p>
+                <p class="card-text mb-1"><strong>Caffeine:</strong> {{ drink.caffeine_amt }} mg</p>
+                <p class="card-text mb-1"><strong>Type:</strong> {{ drink.category }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if not recommendation %}
+        <tr>
+            <td colspan="3" class="text-center text-muted py-4">
+                No drinks found.
+            </td>
+        </tr>
+    {% endif %}
+</div>
+
+
+{% endblock %} 
