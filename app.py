@@ -6,6 +6,7 @@ from models import Drinks, Users, User_Details, GenderEnum, app, db
 from sqlalchemy import func, desc 
 from datetime import datetime, timezone
 from functools import wraps
+import random
 
 
 app = Flask(__name__)
@@ -228,6 +229,7 @@ def recommendation():
     category = request.args.get('category')
     timeofday = request.args.get('timeofday')
     calories = request.args.get('amount') 
+
     
     #get all drink data 
     drinks = Drinks.query
@@ -245,114 +247,25 @@ def recommendation():
 
     # match your lowercase categories
     if category in ["coffee", "tea", "energy", "water"]:
-
         filters.append(Drinks.category == category)
-        if calories:
-            filters.append(Drinks.calories == calories)
+    if calories:
+        filters.append(Drinks.calories == calories)
 
-        if timeofday == "morning":
-            filters.append(Drinks.caffeine_amt == 200)
-        elif timeofday == "afternoon":
-            filters.append((Drinks.caffeine_amt < 150) & (Drinks.caffeine_amt >= 100))
-        elif timeofday == "night":
-            filters.append(Drinks.caffeine_amt < 100)
+    if timeofday == "morning":
+        filters.append(Drinks.caffeine_amt >= 150)
+    elif timeofday == "afternoon":
+        filters.append(Drinks.caffeine_amt.between(100, 150))
+    elif timeofday == "night":
+        filters.append(Drinks.caffeine_amt < 100)
 
-        recommendation = drinks.filter(*filters).limit(3).all()
+    query = drinks.filter(*filters)
+    result = query.all()
 
+    # Random pick from list of valid drinks
+    if len(result) >= 3:
+        recommendation = random.sample(result, 3)
     else:
-        recommendation = []
-
-    # if category == "Coffee":
-    #     if timeofday == "Morning":
-    #         recommendation = drinks.filter(and_(
-    #         Drinks.caffeine_type == category,
-    #         Drinks.calories == calories,
-    #         Drinks.caffeine_amt == 200
-    #     )).limit(3).all()
-
-    #     elif timeofday == "Afternoon":
-    #         recommendation = drinks.filter(and_(
-    #         Drinks.caffeine_type == category,
-    #         Drinks.calories == calories,
-    #         Drinks.caffeine_amt < 150 and Drinks.caffeine_amt >= 100
-    #         )).limit(3).all()
-
-    #     elif timeofday == "Night":
-    #         recommendation = drinks.filter(and_(
-    #             Drinks.caffeine_type == category,
-    #             Drinks.calories == calories,
-    #             Drinks.caffeine_amt < 100
-    #         )).limit(3).all()
-
-    # elif category == "Tea":
-    #     if timeofday == "Morning":
-    #         recommendation = drinks.filter(and_(
-    #         Drinks.caffeine_type == category,
-    #         Drinks.calories == calories,
-    #         Drinks.caffeine_amt == 200
-    #     )).limit(3).all()
-
-    #     elif timeofday == "Afternoon":
-    #         recommendation = drinks.filter(and_(
-    #         Drinks.caffeine_type == category,
-    #         Drinks.calories == calories,
-    #         Drinks.caffeine_amt < 150 and Drinks.caffeine_amt >= 100
-    #         )).limit(3).all()
-
-    #     elif timeofday == "Night":
-    #         recommendation = drinks.filter(and_(
-    #             Drinks.caffeine_type == category,
-    #             Drinks.calories == calories,
-    #             Drinks.caffeine_amt < 100
-    #         )).limit(3).all()
-
-    # elif category == "Water":
-    #     if timeofday == "Morning":
-    #         recommendation = drinks.filter(and_(
-    #         Drinks.caffeine_type == category,
-    #         Drinks.calories == calories,
-    #         Drinks.caffeine_amt == 200
-    #     )).limit(3).all()
-
-    #     elif timeofday == "Afternoon":
-    #         recommendation = drinks.filter(and_(
-    #         Drinks.caffeine_type == category,
-    #         Drinks.calories == calories,
-    #         Drinks.caffeine_amt < 150 and Drinks.caffeine_amt >= 100
-    #         )).limit(3).all()
-
-    #     elif timeofday == "Night":
-    #         recommendation = drinks.filter(and_(
-    #             Drinks.caffeine_type == category,
-    #             Drinks.calories == calories,
-    #             Drinks.caffeine_amt < 100
-    #         )).limit(3).all()
-
-    # elif category == "Energy":
-    #     if timeofday == "Morning":
-    #         recommendation = drinks.filter(and_(
-    #         Drinks.caffeine_type == category,
-    #         Drinks.calories == calories,
-    #         Drinks.caffeine_amt == 200
-    #     )).limit(3).all()
-
-    #     elif timeofday == "Afternoon":
-    #         recommendation = drinks.filter(and_(
-    #         Drinks.caffeine_type == category,
-    #         Drinks.calories == calories,
-    #         Drinks.caffeine_amt < 150 and Drinks.caffeine_amt >= 100
-    #         )).limit(3).all()
-
-    #     elif timeofday == "Night":
-    #         recommendation = drinks.filter(and_(
-    #             Drinks.caffeine_type == category,
-    #             Drinks.calories == calories,
-    #             Drinks.caffeine_amt < 100
-    #         )).limit(3).all()
-
-    # else:
-    #     recommendation = drinks.filter(False)
-
+        recommendation = result
 
 
     return render_template('recommend.html', active_tab='recommendation', 
@@ -500,4 +413,4 @@ def shutdown_session(exception=None):
 
 if __name__ == '__main__':
     app.debug = True
-    app.run(host='0.0.0.0', port=5032)
+    app.run(host='0.0.0.0', port=5034)

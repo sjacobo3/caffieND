@@ -49,6 +49,8 @@ body {
 }
 
 .caffeine-card {
+	position: absolute;
+	height: 100vh;
     width: 30%;
     margin-left: auto;    
     margin-right: 0;
