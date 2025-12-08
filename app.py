@@ -63,6 +63,22 @@ class User_Details(db.Model):
     weight = db.Column(db.Numeric(10, 2))
     caffeine_max = db.Column(db.Integer)
 
+class Favorite_Drinks(db.Model):
+    __tablename__ = 'favorite_drinks'
+    fav_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'))
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
+class Caffeine_Log(db.Model):
+    __tablename__ = 'caffeine_log'
+    log_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'))
+    drink_ml = db.Column(db.Integer)
+    caffeine_consumed = db.Column(db.Integer)
+    consumed_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -107,6 +123,40 @@ def home():
 
     return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination, query=userinput_query, category=userinput_category)
 
+@app.post("/add_favorite")
+@login_required
+def add_favorite():
+    user_id = session['user_id']
+    drink_id = request.form.get('drink_id')
+
+    exists = Favorite_Drinks.query.filter_by(user_id=user_id, drink_id=drink_id).first()
+    if exists:
+        flash("Drink is already in your favorites.")
+        return redirect(url_for('home'))
+
+    new_favorite = Favorite_Drinks(user_id=user_id, drink_id=drink_id)
+    db.session.add(new_favorite)
+    db.session.commit()
+    flash("Added to favorites!", 'success')
+    return redirect(url_for('home'))
+
+@app.route("/log_drink", methods=["POST"])
+@login_required
+def log_drink():
+    user_id = session['user_id']
+    drink_id = request.form.get('drink_id')
+    drink_ml = request.form.get('drink_ml')
+
+    drink = Drinks.query.get(drink_id)
+
+    # calculate caffeine consumed based on volume
+    caffeine_consumed = (drink.caffeine_amt / drink.volume) * int(drink_ml)
+
+    new_log = Caffeine_Log(user_id=user_id, drink_id=drink_id, drink_ml=drink_ml, caffeine_consumed=caffeine_consumed)
+    db.session.add(new_log)
+    db.session.commit()
+    flash("Drink logged!", 'success')
+    return redirect(url_for('home'))
 
 @app.route("/leaderboard")
 def leaderboard():
@@ -413,4 +463,4 @@ def shutdown_session(exception=None):
 
 if __name__ == '__main__':
     app.debug = True
-    app.run(host='0.0.0.0', port=5034)
+    app.run(host='0.0.0.0', port=5030)

@@ -3,93 +3,128 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div style="text-align: center; margin-top: 50px;">
-	<h1 class="title">CaffieND!</h1>
+
+<div class="text-center mb-4">
+    <h1 class="title">CaffieND!</h1>
 </div>
 
+<!-- Search Bar -->
 <form action="/" method="GET" class="mb-4">
     <div class="input-group">
-          <select class="form-select" name="category">
-            <option value="name" {% if request.args.get('category') == 'name' %} selected {% endif %}>Name</option>
-            <option value="calories" {% if request.args.get('category') == 'calories' %} selected {% endif %}>Calories</option>
-            <option value="caffeine_amt" {% if request.args.get('category') == 'caffeine_amt' %} selected {% endif %}>Caffeine Amount</option>
+        <select class="form-select" name="category">
+            <option value="name" {% if request.args.get('category')=='name' %}selected{% endif %}>Name</option>
+            <option value="calories" {% if request.args.get('category')=='calories' %}selected{% endif %}>Calories
+            </option>
+            <option value="caffeine_amt" {% if request.args.get('category')=='caffeine_amt' %}selected{% endif %}>
+                Caffeine Amount</option>
         </select>
 
-        <input 
-            type="text" 
-            class="form-control" 
-            name="name" 
-            placeholder="Search for a drink..."
-            value="{{ request.args.get('name', '') }}"
-        >
+        <input type="text" class="form-control" name="name" placeholder="Search for a drink..."
+            value="{{ request.args.get('name', '') }}">
         <button class="btn btn-primary" type="submit">Search</button>
     </div>
 </form>
 
-
-
+<!-- Drink Cards -->
 <div class="row justify-content-center">
     {% for drink in drinks %}
     <div class="col-12 col-sm-6 col-md-3 mb-4">
-	<div class="card shadow-sm border-0 h-100">
-	    <div class="card-body">
-		<h5 class="card-title">{{ drink.name }}</p>
-		<p class="card-text mb-1"><strong>Volume:</strong> {{ drink.volume }}</p>
-		<p class="card-text mb-1"><strong>Calories:</strong> {{ drink.calories }}</p>
-		<p class="card-text mb-1"><strong>Amount:</strong> {{ drink.caffeine_amt }}</p>
-		<p class="card-text mb-1"><strong>Type:</strong> {{ drink.caffeine_type }}</p>
-  	    </div>
-	</div>
+        <div class="card shadow-sm border-0 h-100" style="cursor:pointer;" data-bs-toggle="modal"
+            data-bs-target="#drinkModal-{{ drink.drink_id }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ drink.name }}</h5>
+                <p class="card-text mb-1"><strong>Volume:</strong> {{ drink.volume }}</p>
+                <p class="card-text mb-1"><strong>Calories:</strong> {{ drink.calories }}</p>
+                <p class="card-text mb-1"><strong>Amount:</strong> {{ drink.caffeine_amt }}</p>
+                <p class="card-text mb-1"><strong>Type:</strong> {{ drink.caffeine_type }}</p>
+            </div>
+        </div>
+
+        <!-- Modal for each drink -->
+        <div class="modal fade" id="drinkModal-{{ drink.drink_id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ drink.name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="modal-body">
+
+                        <!-- Add to Favorites -->
+                        <form action="{{ url_for('add_favorite') }}" method="POST" class="mb-3">
+                            <input type="hidden" name="drink_id" value="{{ drink.drink_id }}">
+                            <button class="btn btn-warning w-100" type="submit">★ Add to Favorites</button>
+                        </form>
+
+                        <hr>
+
+                        <!-- Log Drink Form -->
+                        <form action="{{ url_for('log_drink') }}" method="POST">
+                            <input type="hidden" name="drink_id" value="{{ drink.drink_id }}">
+
+                            <div class="mb-3">
+                                <label for="drink_ml-{{ drink.drink_id }}" class="form-label">Amount consumed
+                                    (mL)</label>
+                                <input type="number" class="form-control" id="drink_ml-{{ drink.drink_id }}"
+                                    name="drink_ml" required min="1">
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">✓ Log This Drink</button>
+                            </div>
+                        </form>
+
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- End Modal -->
+
     </div>
     {% endfor %}
+</div>
 
-<!-- pagination -->
+<!-- Pagination -->
 <nav>
     <ul class="pagination justify-content-center mt-4">
-	<!-- previous button -->
-	{% if pagination.has_prev %}
-	<li>
-	    <a class="page-link" href="{{ url_for('home', page=pagination.prev_num) }}">Previous</a>
-	</li>
 
-	{% else %}
-	<li class="page-item disabled">
-	    <span class="page-link">Previous</span>
-	</li>
-	{% endif %}
-
-	<!-- page numbers -->
-	{% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-            {% if p %}
-                {% if p == pagination.page %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ p }}</span>
-                    </li>
-                {% else %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('home', page=p) }}">{{ p }}</a>
-                    </li>
-                {% endif %}
-            {% else %}
-                <li class="page-item disabled"><span class="page-link">…</span></li>
-            {% endif %}
-        {% endfor %}
-
-
-	<!-- next button -->
-	{% if pagination.has_next %}
+        {% if pagination.has_prev %}
         <li class="page-item">
-            <a class="page-link" href="{{ url_for('home', page=pagination.next_num) }}">Next</a>
+            <a class="page-link" href="{{ url_for('home', page=pagination.prev_num) }}">Previous</a>
         </li>
         {% else %}
-        <li class="page-item disabled">
-            <span class="page-link">Next</span>
-        </li>
+        <li class="page-item disabled"><span class="page-link">Previous</span></li>
         {% endif %}
 
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+        {% if p == pagination.page %}
+        <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+        {% else %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('home', page=p) }}">{{ p }}</a></li>
+        {% endif %}
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('home', page=pagination.next_num) }}">Next</a></li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
 
     </ul>
 </nav>
 
-</div>
 {% endblock %}
