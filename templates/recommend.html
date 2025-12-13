@@ -4,90 +4,223 @@
 
 {% block content %}
 
-
-<div style="text-align: center; margin-top: 50px;">
-	<h1 class="title">Recommendations</h1>
-</div>
-
-
-<div class="card caffeine-card p-4 shadow-sm border-0">
-
-    <h5 class="card-title mb-3">What is my Caffeine Limit Today?</h5>
-    <div class="card-actions">
-    <form method="GET" action="/recommendation">
-        <button type="submit" name="show" value="1" class="btn btn-primary">
-            Calculate My Safe Limit
-        </button>
-    </form>
+<form action="/recommendation" method="POST" class="p-4">
+    <div style="text-align: center;">
+        <h1 class="title">Find Your Perfect Drink!</h1>
+    </div>
+    <!-- prompt user for mood -->
+    <div class="quiz-step">
+        <label style="font-size:1.5rem;"><strong>Mood:</strong></label>
+        <div class="d-flex flex-column gap-2 mt-2">
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="night">Late Night
+                Focus</button>
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="morning">Morning Vibes</button>
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="gym">Gym Session</button>
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="refresh">Refresh</button>
+        </div>
+        <input type="hidden" name="mood" required>
+        <button type="button" class="next-btn btn btn-primary mt-2" disabled>Next</button>
     </div>
 
-    {% if show_limit and user_details %}
-        <hr>
-        <p class="card-content">
-            <strong>{{ user_details.caffeine_max }}</strong> mg
-        </p>
-    {% endif %}
+    <!-- prompt user for flavor preference -->
+    <div class="quiz-step d-none">
+        <label style="font-size:1.5rem;"><strong>Flavor Preference:</strong></label>
+        <div class="d-flex flex-column gap-2 mt-2" id="flavor-options">
+            <!-- generate flavors based on mood -->
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="no-pref">No
+                Preference</button>
+        </div>
+        <input type="hidden" name="flavor" required>
+        <button type="button" class="prev-btn btn btn-secondary mt-2">Back</button>
+        <button type="button" class="next-btn btn btn-primary mt-2" disabled>Next</button>
+    </div>
 
-</div>
+    <!-- prompt user for calorie and sugar preference -->
+    <div class="quiz-step d-none">
+        <label style="font-size:1.5rem;"><strong>Calorie Preference:</strong></label>
+        <div class="d-flex flex-column gap-2 mt-2">
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="low-cal">Low</button>
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="med-cal">Medium</button>
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="high-cal">High</button>
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="no-pref">No
+                Preference</button>
+        </div>
+        <input type="hidden" name="calorie_pref" required>
+        <button type="button" class="prev-btn btn btn-secondary mt-2">Back</button>
+        <button type="button" class="next-btn btn btn-primary mt-2" disabled>Next</button>
 
+    </div>
 
-<form action="/recommendation" method="GET" class="mb-4">
-    <div class="input-group">
-          <select class="form-select" name="category">
-            <option value="coffee" {% if category == 'coffee' %} selected {% endif %}>Coffee ☕</option>
-            <option value="tea" {% if category == 'tea' %} selected {% endif %}>Tea 🍵</option>
-            <option value="energy" {% if category == 'energy' %} selected {% endif %}>Energy ⚡</option>
-			<option value="water" {% if category == 'water' %} selected {% endif %}>Water 💧</option>
-        </select>
+    <div class="quiz-step d-none">
+        <label style="font-size:1.5rem;"><strong>Sugar Preference:</strong></label>
+        <div class="d-flex flex-column gap-2 mt-2">
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="low-sugar">Low</button>
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="med-sugar">Medium</button>
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="high-sugar">High</button>
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="no-pref">No
+                Preference</button>
+        </div>
+        <input type="hidden" name="sugar_pref" required>
+        <button type="button" class="prev-btn btn btn-secondary mt-2">Back</button>
+        <button type="button" class="next-btn btn btn-primary mt-2" disabled>Next</button>
+    </div>
 
-        <select class="form-select" name="timeofday">
-            <option value="morning"  {% if category == 'morning' %} selected {% endif %}>Morning 🌅</option>
-            <option value="afternoon" {% if category == 'afternoon' %} selected {% endif %}>Afternoon ☀️</option>
-            <option value="night" {% if category == 'night' %} selected {% endif %}>Night 🌙</option>
-        </select>
-
-        <input 
-            type="text" 
-            class="form-control" 
-            name="name" 
-            placeholder="How many Calories?"
-            value="{{ request.args.get('amount', '') }}"
-        >
-        <button class="btn btn-primary" type="submit">Search</button>
+    <!-- prompt user for similarity -->
+    <div class="quiz-step d-none">
+        <label style="font-size:1.5rem;"><strong>Familiar or New:</strong></label>
+        <div class="d-flex flex-column gap-2 mt-2">
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="new">Something New</button>
+            <button type="button" class="choice-btn btn btn-outline-primary" data-value="favorites">Similar to My
+                Favorites</button>
+        </div>
+        <input type="hidden" name="similarity" required>
+        <button type="button" class="prev-btn btn btn-secondary mt-2">Back</button>
+        <button type="submit" class="btn btn-success mt-2" disabled>Generate Drinks</button>
     </div>
 </form>
 
-<div style="text-align: center; margin-top: 40px;">
-    <br>
-    <br>
-	<h2 class="subtitle">Your Top 3 Picks!</h2>
-    <br>
-</div>
-
-
-<div class="row justify-content-center">
-    {% for drink in recommendation %}
-    <div class="col-12 col-sm-6 col-md-3 mb-4">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-body">
-                <h5 class="card-title">{{ drink.name }}</h5>
-                <p class="card-text mb-1"><strong>Volume:</strong> {{ drink.volume }}</p>
-                <p class="card-text mb-1"><strong>Calories:</strong> {{ drink.calories }}</p>
-                <p class="card-text mb-1"><strong>Caffeine:</strong> {{ drink.caffeine_amt }} mg</p>
-                <p class="card-text mb-1"><strong>Type:</strong> {{ drink.category }}</p>
+<!-- show the drinks -->
+<div id="generated-drinks" class="d-none">
+    {% if recommendation is not none %}
+    <h2 class="title mb-4">Your Recommended Drinks</h2>
+    {% if recommendation|length > 0 %}
+    <div class="list-group">
+        {% for drink in recommendation %}
+        <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 shadow-sm">
+            <div class="d-flex w-100 justify-content-between">
+                <h4 class="mb-1 text-primary">{{ drink.name }}</h4>
+                <small class="text-muted">{{ drink.calories }} Cal</small>
             </div>
+            <p class="mb-1">
+                <strong>Flavor:</strong> {{ drink.flavor }}
+                | <strong>Caffeine:</strong> {{ drink.caffeine_amt }} mg | <strong>Sugar:</strong> {{ drink.sugar_g }} g
+            </p>
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
+    {% else %}
+    <div class="alert alert-warning" role="alert">
+        No drinks matched all your preferences.
 
-    {% if not recommendation %}
-        <tr>
-            <td colspan="3" class="text-center text-muted py-4">
-                No drinks found.
-            </td>
-        </tr>
+    </div>
+    <a href="/recommendation" class="btn btn-info mt-3">Start a New Quiz</a>
+    {% endif %}
     {% endif %}
 </div>
 
+<script>
+    const flavor_options = {
+        "night": ["Fruity", "Citrus", "Herbal"],
+        "morning": ["Vanilla", "Caramel", "Hazelnut", "Mocha"],
+        "gym": ["Berry", "Citrus", "Watermelon"],
+        "refresh": ["Mint", "Peach", "Citrus", "Lime"]
+    };
 
-{% endblock %} 
+    document.addEventListener("DOMContentLoaded", function () {
+        const steps = document.querySelectorAll(".quiz-step");
+        const form = document.querySelector("form");
+        const drinksSection = document.getElementById("generated-drinks");
+        let currentStep = 0;
+
+        const showStep = index => {
+            steps.forEach((s, i) => {
+                s.classList.toggle("d-none", i !== index);
+            });
+
+            const currentStepElement = steps[index];
+            const hiddenInput = currentStepElement.querySelector("input[type='hidden']");
+            const nextBtn = currentStepElement.querySelector(".next-btn") || currentStepElement.querySelector("button[type='submit']");
+
+            if (nextBtn) {
+                nextBtn.disabled = !hiddenInput.value;
+            }
+        };
+
+        const handleChoiceSelection = (event) => {
+            const btn = event.currentTarget;
+            const step = btn.closest(".quiz-step");
+            const hiddenInput = step.querySelector("input[type='hidden']");
+            const nextBtn = step.querySelector(".next-btn") || step.querySelector("button[type='submit']");
+
+            hiddenInput.value = btn.dataset.value;
+
+            step.querySelectorAll(".choice-btn").forEach(b => {
+                b.classList.remove("btn-primary");
+                b.classList.add("btn-outline-primary");
+            });
+            btn.classList.remove("btn-outline-primary");
+            btn.classList.add("btn-primary");
+
+            if (nextBtn) {
+                nextBtn.disabled = false;
+            }
+
+            if (hiddenInput.name === "mood") {
+                steps[1].querySelector("input[name='flavor']").value = "";
+                steps[1].querySelectorAll(".choice-btn").forEach(b => {
+                    b.classList.remove("btn-primary");
+                    b.classList.add("btn-outline-primary");
+                });
+                generateFlavorOptions(hiddenInput.value);
+            }
+        };
+
+        const nextBtns = document.querySelectorAll(".next-btn");
+        nextBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                currentStep++;
+                if (currentStep < steps.length) {
+                    showStep(currentStep);
+                }
+            });
+        });
+
+        const prevBtns = document.querySelectorAll(".prev-btn");
+        prevBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                currentStep--;
+                if (currentStep < 0) currentStep = 0;
+                showStep(currentStep);
+            });
+        });
+
+        const choiceBtns = document.querySelectorAll(".choice-btn");
+        choiceBtns.forEach(btn => {
+            btn.addEventListener("click", handleChoiceSelection);
+        });
+
+        showStep(currentStep);
+
+        // Function to generate flavor options
+        const generateFlavorOptions = (mood) => {
+            const flavorContainer = document.getElementById("flavor-options");
+            const noPrefButton = flavorContainer.querySelector('[data-value="no-pref"]');
+            flavorContainer.innerHTML = '';
+
+            if (flavor_options[mood]) {
+                flavor_options[mood].forEach(flavorName => {
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "choice-btn btn btn-outline-primary";
+                    btn.dataset.value = flavorName.toLowerCase();
+                    btn.textContent = flavorName;
+                    btn.addEventListener("click", handleChoiceSelection);
+                    flavorContainer.appendChild(btn);
+                });
+            }
+
+            flavorContainer.appendChild(noPrefButton);
+        };
+
+        // Handle form submission
+        form.addEventListener("submit", (event) => {
+            event.preventDefault(); // Prevent form submission to the server
+
+            // Hide the form and show the generated drinks
+            form.classList.add("d-none");
+            drinksSection.classList.remove("d-none");
+        });
+    });
+
+</script>
+{% endblock %}

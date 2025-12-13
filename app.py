@@ -299,57 +299,87 @@ def leaderboard():
                          leadertype=category)
 
 
-@app.route("/recommendation")
+@app.route("/recommendation", methods=["GET", "POST"])
 @login_required
 def recommendation():
-    # get user inputs for search 
-    category = request.args.get('category')
-    timeofday = request.args.get('timeofday')
-    calories = request.args.get('amount') 
-
+    user = session['user_id']
     
-    #get all drink data 
-    drinks = Drinks.query
+    if request.method == "POST":
+        # get user inputs from form
+        mood = request.form.get("mood")
+        flavor = request.form.get("flavor")
+        calorie_pref = request.form.get("calorie_pref")
+        sugar_pref = request.form.get("sugar_pref")
+        similarity = request.form.get("similarity")
+        
+        # base query
+        query = Drinks.query
 
-    show_limit = request.args.get("show") == "1"
+        # filter based on mood (Caffeine in mg) 
+        if mood == "night":
+            query = query.filter(Drinks.caffeine_amt.between(80, 200))
+        elif mood == "morning":
+            query = query.filter(Drinks.caffeine_amt.between(30, 100))
+        elif mood == "gym":
+            query = query.filter(Drinks.caffeine_amt.between(150, 300))
+        elif mood == "refresh":
+            query = query.filter(Drinks.caffeine_amt == 0)
+        
+        # filter based on flavor
+        if flavor and flavor != "no-pref":
+            query = query.filter(Drinks.flavor.ilike(f"%{flavor}%"))
 
-    if "user_id" in session: 
-      user_id = session.get('user_id')
-      # check if the user already has information
-      user_details = User_Details.query.filter_by(user_id=user_id).first()     
+        # filter based on calorie preference
+        if calorie_pref == "low-cal":
+            query = query.filter(Drinks.calories < 50)
+        elif calorie_pref == "med-cal":
+            query = query.filter(Drinks.calories.between(50, 150))
+        elif calorie_pref == "high-cal":
+            query = query.filter(Drinks.calories > 150)
 
-    # max caffeine per day calculation
-    user_details.caffeine_max = float(user_details.weight) * 2.5
-    filters = []
+        # filter based on sugar preference (Sugar in grams, ranges to match button labels: <50, 50-150, >150)
+        # High Sugar: Over 11.25g per 100ml
+        # Medium Sugar (Amber): 5g to 22.5g per 100g/ml.
+        # Low Sugar (Green): 5g or less per 100g/ml.
+        if sugar_pref == "low-sugar":
+            query = query.filter(Drinks.sugar_g < 50)
+        elif sugar_pref == "med-sugar":
+            query = query.filter(Drinks.sugar_g.between(50, 150))
+        elif sugar_pref == "high-sugar":
+            query = query.filter(Drinks.sugar_g > 150)
 
-    # match your lowercase categories
-    if category in ["coffee", "tea", "energy", "water"]:
-        filters.append(Drinks.category == category)
-    if calories:
-        filters.append(Drinks.calories == calories)
+        # filter based on similarity preference
+        if similarity == "favorites":
+            # get user's top rated drinks
+            top_rated = db.session.query(
+                Drink_Ratings.drink_id
+                ).filter(
+                    Drink_Ratings.user_id == user
+                    ).order_by(
+                        desc(Drink_Ratings.rating)
+                        ).limit(5).all()
+        
+            top_rated_ids = [drink_id for (drink_id,) in top_rated]
+            
+            if top_rated_ids:
+                # get flavors of top rated drinks
+                favored_flavors = db.session.query(
+                    Drinks.flavor
+                    ).filter(
+                        Drinks.drink_id.in_(top_rated_ids)
+                        ).all()
+            # Extract the first flavor from potentially comma-separated string
+            favored_flavor_list = [flavor.split(',')[0].strip() for (flavor,) in favored_flavors if flavor]
+            
+            if favored_flavor_list:
+                # filter drinks to match favored flavors
+                query = query.filter(Drinks.flavor.in_(favored_flavor_list))
+            
+        drinks = query.all()
+        
+        return render_template('recommend.html', active_tab='recommendation', recommendation=drinks)
 
-    if timeofday == "morning":
-        filters.append(Drinks.caffeine_amt >= 150)
-    elif timeofday == "afternoon":
-        filters.append(Drinks.caffeine_amt.between(100, 150))
-    elif timeofday == "night":
-        filters.append(Drinks.caffeine_amt < 100)
-
-    query = drinks.filter(*filters)
-    result = query.all()
-
-    # Random pick from list of valid drinks
-    if len(result) >= 3:
-        recommendation = random.sample(result, 3)
-    else:
-        recommendation = result
-
-
-    return render_template('recommend.html', active_tab='recommendation', 
-                           recommendation=recommendation, 
-                           timeofday=timeofday, calories=calories, 
-                           category=category, show_limit=show_limit, 
-                           user_details=user_details)
+    return render_template('recommend.html', active_tab='recommendation')
 
 @app.route("/accounts")
 @login_required
