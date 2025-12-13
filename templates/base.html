@@ -17,18 +17,49 @@
 <body class="d-flex flex-column min-vh-100">
 
     <!-- nav bar -->
-    <div class="navbar">
-        <a href="{{ url_for('home') }}" class="tab {% if active_tab == 'home' %}active{% endif %}">Home</a>
-        <a href="{{ url_for('leaderboard') }}"
-            class="tab {% if active_tab == 'leaderboard' %}active{% endif %}">Leaderboard</a>
-        <a href="{{ url_for('recommendation') }}"
-            class="tab {% if active_tab == 'recommendation' %}active{% endif %}">Recommendations</a>
-        {% if 'user_id' in session %}
-        <a href="{{ url_for('accounts') }}" class="tab {% if active_tab == 'accounts' %}active{% endif %}">Account</a>
-        {% else %}
-        <a href="{{ url_for('login') }}" class="tab {% if active_tab == 'login' %}active{% endif %}">Login</a>
-        {% endif %}
-    </div>
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm custom-navbar">
+        <div class="container">
+            <!-- brand -->
+            <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">
+                <span class="brand-font">CAFFIEND!</span>
+            </a>
+
+            <!-- mobile -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto gap-2 text-center">
+                    <li class="nav-item">
+                        <a href="{{ url_for('home') }}"
+                            class="tab {% if active_tab == 'home' %}active{% endif %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('leaderboard') }}"
+                            class="tab {% if active_tab == 'leaderboard' %}active{% endif %}">Leaderboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('recommendation') }}"
+                            class="tab {% if active_tab == 'recommendation' %}active{% endif %}">Recommendations</a>
+                    </li>
+                    {% if 'user_id' in session %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('accounts') }}"
+                            class="tab {% if active_tab == 'accounts' %}active{% endif %}">Account</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('login') }}"
+                            class="tab {% if active_tab == 'login' %}active{% endif %}">Login</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
 
     <!-- create flash messages -->
     <div class="container mt-4">
