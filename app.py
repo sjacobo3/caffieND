@@ -20,6 +20,9 @@ app.config['SECRET_KEY'] = os.urandom(24) # generate a random 24 byte string for
 # initialize SQLAlechemy
 db = SQLAlchemy(app)
 
+# set timezone to eastern time
+eastern = timezone.utc 
+
 # MODELS
 class Drinks(db.Model):
     __tablename__ = 'drinks'
@@ -53,7 +56,7 @@ class Drink_Ratings(db.Model):
     drink_id = db.Column(db.Integer)
     user_id = db.Column(db.Integer)
     rating = db.Column(db.SmallInteger)
-    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=datetime.today())
 
 class User_Details(db.Model):
     __tablename__ = 'user_details'
@@ -63,12 +66,12 @@ class User_Details(db.Model):
     weight = db.Column(db.Numeric(10, 2))
     caffeine_max = db.Column(db.Integer)
 
-class Favorite_Drinks(db.Model):
-    __tablename__ = 'favorite_drinks'
+class Drink_Favorites(db.Model):
+    __tablename__ = 'drink_favorites'
     fav_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'))
-    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=datetime.today())
 
 class Caffeine_Log(db.Model):
     __tablename__ = 'caffeine_log'
@@ -77,7 +80,7 @@ class Caffeine_Log(db.Model):
     drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'))
     drink_ml = db.Column(db.Integer)
     caffeine_consumed = db.Column(db.Integer)
-    consumed_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    consumed_at = db.Column(db.DateTime, default=datetime.today())
 
 def login_required(f):
     @wraps(f)
@@ -91,6 +94,8 @@ def login_required(f):
 
 @app.route("/")
 def home():
+    user_id = session['user_id'] if 'user_id' in session else None
+
     #get user inputs for search 
     userinput_query = request.args.get('name', None)
     userinput_category = request.args.get('category', 'name')
@@ -121,23 +126,43 @@ def home():
     pagination = drinks.paginate(page=page, per_page=per_page, error_out=False)
     items = pagination.items
 
-    return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination, query=userinput_query, category=userinput_category)
+    # get user favorites if logged in
+    user_favorites = Drink_Favorites.query.filter_by(user_id=user_id).all() if user_id else []
+    user_favorite_ids = {fav.drink_id for fav in user_favorites}
+
+    return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination, query=userinput_query, category=userinput_category, user_favorites=user_favorite_ids)
 
 @app.post("/add_favorite")
 @login_required
 def add_favorite():
     user_id = session['user_id']
-    drink_id = request.form.get('drink_id')
+    drink_id = request.form.get('drink_id', type=int)
 
-    exists = Favorite_Drinks.query.filter_by(user_id=user_id, drink_id=drink_id).first()
+    exists = Drink_Favorites.query.filter_by(user_id=user_id, drink_id=drink_id).first()
     if exists:
         flash("Drink is already in your favorites.")
         return redirect(url_for('home'))
 
-    new_favorite = Favorite_Drinks(user_id=user_id, drink_id=drink_id)
+    new_favorite = Drink_Favorites(user_id=user_id, drink_id=drink_id)
     db.session.add(new_favorite)
     db.session.commit()
     flash("Added to favorites!", 'success')
+    return redirect(url_for('home'))
+
+@app.post("/remove_favorite")
+@login_required
+def remove_favorite():
+    user_id = session['user_id']
+    drink_id = request.form.get('drink_id', type=int)
+
+    exists = Drink_Favorites.query.filter_by(user_id=user_id, drink_id=drink_id).first()
+    if exists:
+        db.session.delete(exists)
+        db.session.commit()
+        flash("Removed from favorites!", 'success')
+        return redirect(url_for('home'))
+
+    flash("Drink is not in your favorites.")
     return redirect(url_for('home'))
 
 @app.route("/log_drink", methods=["POST"])
@@ -160,7 +185,6 @@ def log_drink():
 
 @app.route("/leaderboard")
 def leaderboard():
-   
     #get selected category (default overall)
     category = request.args.get('leadertype', 'overall')
           

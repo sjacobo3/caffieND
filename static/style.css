@@ -1,5 +1,5 @@
 body {
-	margin: 0 auto;
+	padding-top: 80px;
 }
 
 .title {
@@ -11,13 +11,15 @@ body {
 }
 
 .custom-navbar {
-	position: sticky;
+	position: fixed;
 	top: 0;
-	z-index: 1000;
+	width: 100%;
+	z-index: 100;
 	background: linear-gradient(135deg, #0c0246, #3b3658);
 }
 
-.navbar-brand {
+.brand-font {
+	font-size: 2rem;
 	font-family: 'Dancing Script', cursive;
 	color: #ab0a43 !important;
 }
@@ -34,14 +36,12 @@ body {
 }
 
 .nav-item:hover {
-	/* background-color: rgba(255, 204, 128, 0.25); */
 	background-color: rgb(210, 170, 185, 0.25);
 	color: #ab0a43 !important;
 }
 
-.nav-item.active {
-	/* background-color: #ab0a43 !important; */
-	text-decoration: #ab0a43 !important;
+.nav-item a.active {
+	color: #ab0a43 !important;
 	font-weight: 600;
 }
 

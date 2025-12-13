@@ -36,7 +36,7 @@
                 <p class="card-text mb-1"><strong>Volume:</strong> {{ drink.volume }}</p>
                 <p class="card-text mb-1"><strong>Calories:</strong> {{ drink.calories }}</p>
                 <p class="card-text mb-1"><strong>Amount:</strong> {{ drink.caffeine_amt }}</p>
-                <p class="card-text mb-1"><strong>Type:</strong> {{ drink.caffeine_type }}</p>
+                <!-- <p class="card-text mb-1"><strong>Type:</strong> {{ drink.caffeine_type }}</p> -->
             </div>
         </div>
 
@@ -54,11 +54,20 @@
                     <!-- Modal Body -->
                     <div class="modal-body">
 
-                        <!-- Add to Favorites -->
+                        <!-- Favorites -->
+                        {% if drink.drink_id in user_favorites %}
+                        <form action="{{ url_for('remove_favorite') }}" method="POST" class="mb-3">
+                            <input type="hidden" name="drink_id" value="{{ drink.drink_id }}">
+                            <!-- remove from favorites -->
+                            <button class="btn btn-secondary w-100" type="submit">☆ Remove from Favorites</button>
+                        </form>
+                        {% else %}
                         <form action="{{ url_for('add_favorite') }}" method="POST" class="mb-3">
                             <input type="hidden" name="drink_id" value="{{ drink.drink_id }}">
+                            <!-- add to favorites -->
                             <button class="btn btn-warning w-100" type="submit">★ Add to Favorites</button>
                         </form>
+                        {% endif %}
 
                         <hr>
 
