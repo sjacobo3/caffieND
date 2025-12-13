@@ -24,23 +24,23 @@ body {
 	color: #ab0a43 !important;
 }
 
-.nav-item {
+.nav-item.base {
 	padding: 8px 14px;
 	border-radius: 20px;
 	transition: all 0.3s ease;
 }
 
-.nav-item a {
+.nav-item.base a {
 	color: #f5f5f5 !important;
 	text-decoration: none;
 }
 
-.nav-item:hover {
+.nav-item.base:hover {
 	background-color: rgb(210, 170, 185, 0.25);
 	color: #ab0a43 !important;
 }
 
-.nav-item a.active {
+.nav-item.base a.active {
 	color: #ab0a43 !important;
 	font-weight: 600;
 }
@@ -76,4 +76,18 @@ body {
 .card-content {
 	text-align: center;
 	font-size: 30px;
+}
+
+.nav-pills .nav-link.active {
+	background-color: #0c0246 !important;
+	color: white !important;
+}
+
+.nav-pills .nav-link {
+	color: #0c0246 !important
+}
+
+.nav-pills .nav-link:hover {
+	background-color: rgb(10, 5, 70, 0.25) !important;
+	color: #0c0246 !important;
 }

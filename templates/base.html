@@ -32,25 +32,25 @@
             <!-- links -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto gap-2 text-center">
-                    <li class="nav-item">
+                    <li class="nav-item base">
                         <a href="{{ url_for('home') }}"
                             class="tab {% if active_tab == 'home' %}active{% endif %}">Home</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item base">
                         <a href="{{ url_for('leaderboard') }}"
                             class="tab {% if active_tab == 'leaderboard' %}active{% endif %}">Leaderboard</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item base">
                         <a href="{{ url_for('recommendation') }}"
                             class="tab {% if active_tab == 'recommendation' %}active{% endif %}">Recommendations</a>
                     </li>
                     {% if 'user_id' in session %}
-                    <li class="nav-item">
+                    <li class="nav-item base">
                         <a href="{{ url_for('accounts') }}"
                             class="tab {% if active_tab == 'accounts' %}active{% endif %}">Account</a>
                     </li>
                     {% else %}
-                    <li class="nav-item">
+                    <li class="nav-item base">
                         <a href="{{ url_for('login') }}"
                             class="tab {% if active_tab == 'login' %}active{% endif %}">Login</a>
                     </li>

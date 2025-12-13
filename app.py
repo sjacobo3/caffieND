@@ -20,9 +20,6 @@ app.config['SECRET_KEY'] = os.urandom(24) # generate a random 24 byte string for
 # initialize SQLAlechemy
 db = SQLAlchemy(app)
 
-# set timezone to eastern time
-eastern = timezone.utc 
-
 # MODELS
 class Drinks(db.Model):
     __tablename__ = 'drinks'
@@ -56,7 +53,7 @@ class Drink_Ratings(db.Model):
     drink_id = db.Column(db.Integer)
     user_id = db.Column(db.Integer)
     rating = db.Column(db.SmallInteger)
-    created_at = db.Column(db.DateTime, default=datetime.today())
+    created_at = db.Column(db.DateTime, default=datetime.now())
 
 class User_Details(db.Model):
     __tablename__ = 'user_details'
@@ -69,9 +66,12 @@ class User_Details(db.Model):
 class Drink_Favorites(db.Model):
     __tablename__ = 'drink_favorites'
     fav_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'))
-    created_at = db.Column(db.DateTime, default=datetime.today())
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())   
+
+    user = db.relationship('Users', backref=db.backref('favorites'))
+    drink = db.relationship('Drinks', backref=db.backref('favorited_by'))
 
 class Caffeine_Log(db.Model):
     __tablename__ = 'caffeine_log'
@@ -80,7 +80,10 @@ class Caffeine_Log(db.Model):
     drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'))
     drink_ml = db.Column(db.Integer)
     caffeine_consumed = db.Column(db.Integer)
-    consumed_at = db.Column(db.DateTime, default=datetime.today())
+    consumed_at = db.Column(db.DateTime, default=datetime.now())
+
+    user = db.relationship('Users', backref=db.backref('caffeine_logs'))
+    drink = db.relationship('Drinks', backref=db.backref('caffeine_logs'))
 
 def login_required(f):
     @wraps(f)
@@ -354,7 +357,13 @@ def accounts():
     user_id = session.get('user_id')
     user_details = User_Details.query.filter_by(user_id=user_id).first()
 
-    return render_template('accounts.html', active_tab='accounts', user_details=user_details)
+    # fetch caffeine logs
+    logs = Caffeine_Log.query.filter_by(user_id=user_id).order_by(Caffeine_Log.consumed_at.desc()).all()
+    
+    # fetch favorite drinks
+    favorites = Drink_Favorites.query.filter_by(user_id=user_id).join(Drinks).all()
+
+    return render_template('accounts.html', active_tab='accounts', user_details=user_details, caffeine_logs=logs, favorites=favorites)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
