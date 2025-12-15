@@ -4,83 +4,86 @@
 
 {% block content %}
 
-<form action="/recommendation" method="POST" class="p-4">
-    <div style="text-align: center;">
-        <h1 class="title">Find Your Perfect Drink!</h1>
-    </div>
-    <!-- prompt user for mood -->
-    <div class="quiz-step">
-        <label style="font-size:1.5rem;"><strong>Mood:</strong></label>
-        <div class="d-flex flex-column gap-2 mt-2">
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="night">Late Night
-                Focus</button>
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="morning">Morning Vibes</button>
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="gym">Gym Session</button>
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="refresh">Refresh</button>
+<div class="{% if recommendation is not none %}d-none{% endif %}">
+    <form action="/recommendation" method="POST" class="p-4">
+        <div style="text-align: center;">
+            <h1 class="title">Find Your Perfect Drink!</h1>
         </div>
-        <input type="hidden" name="mood" required>
-        <button type="button" class="next-btn btn btn-primary mt-2" disabled>Next</button>
-    </div>
-
-    <!-- prompt user for flavor preference -->
-    <div class="quiz-step d-none">
-        <label style="font-size:1.5rem;"><strong>Flavor Preference:</strong></label>
-        <div class="d-flex flex-column gap-2 mt-2" id="flavor-options">
-            <!-- generate flavors based on mood -->
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="no-pref">No
-                Preference</button>
+        <!-- prompt user for mood -->
+        <div class="quiz-step">
+            <label style="font-size:1.5rem;"><strong>Mood:</strong></label>
+            <div class="d-flex flex-column gap-2 mt-2">
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="night">Late Night
+                    Focus</button>
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="morning">Morning
+                    Vibes</button>
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="gym">Gym Session</button>
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="refresh">Refresh</button>
+            </div>
+            <input type="hidden" name="mood" required>
+            <button type="button" class="next-btn btn btn-primary mt-2" disabled>Next</button>
         </div>
-        <input type="hidden" name="flavor" required>
-        <button type="button" class="prev-btn btn btn-secondary mt-2">Back</button>
-        <button type="button" class="next-btn btn btn-primary mt-2" disabled>Next</button>
-    </div>
 
-    <!-- prompt user for calorie and sugar preference -->
-    <div class="quiz-step d-none">
-        <label style="font-size:1.5rem;"><strong>Calorie Preference:</strong></label>
-        <div class="d-flex flex-column gap-2 mt-2">
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="low-cal">Low</button>
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="med-cal">Medium</button>
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="high-cal">High</button>
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="no-pref">No
-                Preference</button>
+        <!-- prompt user for flavor preference -->
+        <div class="quiz-step d-none">
+            <label style="font-size:1.5rem;"><strong>Flavor Preference:</strong></label>
+            <div class="d-flex flex-column gap-2 mt-2" id="flavor-options">
+                <!-- generate flavors based on mood -->
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="no-pref">No
+                    Preference</button>
+            </div>
+            <input type="hidden" name="flavor" required>
+            <button type="button" class="prev-btn btn btn-secondary mt-2">Back</button>
+            <button type="button" class="next-btn btn btn-primary mt-2" disabled>Next</button>
         </div>
-        <input type="hidden" name="calorie_pref" required>
-        <button type="button" class="prev-btn btn btn-secondary mt-2">Back</button>
-        <button type="button" class="next-btn btn btn-primary mt-2" disabled>Next</button>
 
-    </div>
+        <!-- prompt user for calorie and sugar preference -->
+        <div class="quiz-step d-none">
+            <label style="font-size:1.5rem;"><strong>Calorie Preference:</strong></label>
+            <div class="d-flex flex-column gap-2 mt-2">
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="low-cal">Low</button>
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="med-cal">Medium</button>
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="high-cal">High</button>
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="no-pref">No
+                    Preference</button>
+            </div>
+            <input type="hidden" name="calorie_pref" required>
+            <button type="button" class="prev-btn btn btn-secondary mt-2">Back</button>
+            <button type="button" class="next-btn btn btn-primary mt-2" disabled>Next</button>
 
-    <div class="quiz-step d-none">
-        <label style="font-size:1.5rem;"><strong>Sugar Preference:</strong></label>
-        <div class="d-flex flex-column gap-2 mt-2">
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="low-sugar">Low</button>
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="med-sugar">Medium</button>
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="high-sugar">High</button>
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="no-pref">No
-                Preference</button>
         </div>
-        <input type="hidden" name="sugar_pref" required>
-        <button type="button" class="prev-btn btn btn-secondary mt-2">Back</button>
-        <button type="button" class="next-btn btn btn-primary mt-2" disabled>Next</button>
-    </div>
 
-    <!-- prompt user for similarity -->
-    <div class="quiz-step d-none">
-        <label style="font-size:1.5rem;"><strong>Familiar or New:</strong></label>
-        <div class="d-flex flex-column gap-2 mt-2">
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="new">Something New</button>
-            <button type="button" class="choice-btn btn btn-outline-primary" data-value="favorites">Similar to My
-                Favorites</button>
+        <div class="quiz-step d-none">
+            <label style="font-size:1.5rem;"><strong>Sugar Preference:</strong></label>
+            <div class="d-flex flex-column gap-2 mt-2">
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="low-sugar">Low</button>
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="med-sugar">Medium</button>
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="high-sugar">High</button>
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="no-pref">No
+                    Preference</button>
+            </div>
+            <input type="hidden" name="sugar_pref" required>
+            <button type="button" class="prev-btn btn btn-secondary mt-2">Back</button>
+            <button type="button" class="next-btn btn btn-primary mt-2" disabled>Next</button>
         </div>
-        <input type="hidden" name="similarity" required>
-        <button type="button" class="prev-btn btn btn-secondary mt-2">Back</button>
-        <button type="submit" class="btn btn-success mt-2" disabled>Generate Drinks</button>
-    </div>
-</form>
+
+        <!-- prompt user for similarity -->
+        <div class="quiz-step d-none">
+            <label style="font-size:1.5rem;"><strong>Familiar or New:</strong></label>
+            <div class="d-flex flex-column gap-2 mt-2">
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="new">Something New</button>
+                <button type="button" class="choice-btn btn btn-outline-primary" data-value="favorites">Similar to My
+                    Favorites</button>
+            </div>
+            <input type="hidden" name="similarity" required>
+            <button type="button" class="prev-btn btn btn-secondary mt-2">Back</button>
+            <button type="submit" class="btn btn-success mt-2" disabled>Generate Drinks</button>
+        </div>
+    </form>
+</div>
 
 <!-- show the drinks -->
-<div id="generated-drinks" class="d-none">
+<div id="generated-drinks" class="{% if recommendation is none %}d-none{% endif %}">
     {% if recommendation is not none %}
     <h2 class="title mb-4">Your Recommended Drinks</h2>
     {% if recommendation|length > 0 %}
@@ -103,8 +106,8 @@
         No drinks matched all your preferences.
 
     </div>
-    <a href="/recommendation" class="btn btn-info mt-3">Start a New Quiz</a>
     {% endif %}
+    <a href="/recommendation" class="btn btn-info mt-3">Start a New Quiz</a>
     {% endif %}
 </div>
 
@@ -211,15 +214,6 @@
 
             flavorContainer.appendChild(noPrefButton);
         };
-
-        // Handle form submission
-        form.addEventListener("submit", (event) => {
-            event.preventDefault(); // Prevent form submission to the server
-
-            // Hide the form and show the generated drinks
-            form.classList.add("d-none");
-            drinksSection.classList.remove("d-none");
-        });
     });
 
 </script>

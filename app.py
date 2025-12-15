@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 import os
 from models import Drinks, Users, User_Details, GenderEnum, app, db
-from sqlalchemy import func, desc 
+from sqlalchemy import func, desc, or_
 from datetime import datetime, timezone
 from functools import wraps
 import random
@@ -99,28 +99,21 @@ def login_required(f):
 def home():
     user_id = session['user_id'] if 'user_id' in session else None
 
-    #get user inputs for search 
-    userinput_query = request.args.get('name', None)
-    userinput_category = request.args.get('category', 'name')
+    q = request.args.get('q')
+    low_cal = request.args.get('low_cal')
+    low_caffeine = request.args.get('low_caffeine')
 
     #get all drink data 
     drinks = Drinks.query
 
-    if userinput_query: 
-        if userinput_category == 'name':
-            drinks = drinks.filter(func.lower(Drinks.name).contains(userinput_query.lower()))
-        elif userinput_category == 'calories': 
-            if userinput_query.isdigit():
-                drinks = drinks.filter(Drinks.calories == int(userinput_query))
-            else: 
-                drinks = drinks.filter(False)
-        elif userinput_category == 'caffeine_amt': 
-            if userinput_query.isdigit(): 
-                drinks = drinks.filter(Drinks.caffeine_amt == int(userinput_query))
-            else: 
-                drinks = drinks.filter(False)
-        else:
-            drinks = drinks.filter(False)
+    if q: 
+        drinks = drinks.filter(func.lower(Drinks.name).contains(q.lower()))
+
+    # filters
+    if low_cal:
+        drinks = drinks.filter(Drinks.calories <= 100)
+    if low_caffeine:
+        drinks = drinks.filter(Drinks.caffeine_amt <= 50)
 
     # pagination
     page = request.args.get('page', 1, type=int)
@@ -133,7 +126,7 @@ def home():
     user_favorites = Drink_Favorites.query.filter_by(user_id=user_id).all() if user_id else []
     user_favorite_ids = {fav.drink_id for fav in user_favorites}
 
-    return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination, query=userinput_query, category=userinput_category, user_favorites=user_favorite_ids)
+    return render_template('home.html', drinks=items, active_tab='home', pagination=pagination, user_favorites=user_favorite_ids)
 
 @app.post("/add_favorite")
 @login_required
@@ -313,7 +306,7 @@ def recommendation():
         similarity = request.form.get("similarity")
         
         # base query
-        query = Drinks.query
+        query = db.session.query(Drinks)
 
         # filter based on mood (Caffeine in mg) 
         if mood == "night":
@@ -323,11 +316,11 @@ def recommendation():
         elif mood == "gym":
             query = query.filter(Drinks.caffeine_amt.between(150, 300))
         elif mood == "refresh":
-            query = query.filter(Drinks.caffeine_amt == 0)
+            query = query.filter(Drinks.caffeine_amt < 100)
         
         # filter based on flavor
         if flavor and flavor != "no-pref":
-            query = query.filter(Drinks.flavor.ilike(f"%{flavor}%"))
+            query = query.filter(or_(*[Drinks.flavor.ilike(f"%{flavor}%")]))
 
         # filter based on calorie preference
         if calorie_pref == "low-cal":
@@ -342,11 +335,11 @@ def recommendation():
         # Medium Sugar (Amber): 5g to 22.5g per 100g/ml.
         # Low Sugar (Green): 5g or less per 100g/ml.
         if sugar_pref == "low-sugar":
-            query = query.filter(Drinks.sugar_g < 50)
+            query = query.filter(Drinks.sugar_g < 5)
         elif sugar_pref == "med-sugar":
-            query = query.filter(Drinks.sugar_g.between(50, 150))
+            query = query.filter(Drinks.sugar_g.between(6, 15))
         elif sugar_pref == "high-sugar":
-            query = query.filter(Drinks.sugar_g > 150)
+            query = query.filter(Drinks.sugar_g > 15)
 
         # filter based on similarity preference
         if similarity == "favorites":
@@ -375,11 +368,11 @@ def recommendation():
                 # filter drinks to match favored flavors
                 query = query.filter(Drinks.flavor.in_(favored_flavor_list))
             
-        drinks = query.all()
+        drinks = query.limit(3).all()
         
         return render_template('recommend.html', active_tab='recommendation', recommendation=drinks)
 
-    return render_template('recommend.html', active_tab='recommendation')
+    return render_template('recommend.html', active_tab='recommendation',  recommendation=None)
 
 @app.route("/accounts")
 @login_required

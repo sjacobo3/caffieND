@@ -32,6 +32,7 @@
             <ul class="list-group">
                 {% for log in caffeine_logs %}
                 <li class="list-group-item d-flex justify-content-between">
+                    <span>{{ log.consumed_at.strftime("%m-%d-%Y") }}</span>
                     <span>{{ log.drink.name }}</span>
                     <span>{{ log.caffeine_consumed }}</span>
                 </li>
