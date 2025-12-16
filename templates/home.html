@@ -14,19 +14,28 @@
         <div class="col-md-3">
             <h5>Filters:</h5>
             <!-- calories -->
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="low_cal" {% if
-                    request.args.get('low_cal')%}checked{% endif %}>
-                <label class="form-check-label">Low Calories</label>
-            </div>
-            <!-- caffeine -->
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="low_caffeine" {% if
-                    request.args.get('low_caffeine')%}checked{% endif %}>
-                <label class="form-check-label">Low Caffeine</label>
+            <div>
+                <label class="form-label">Calories</label> <br />
+                <input id="calorieRange" type="text" name="calories" />
+
             </div>
 
-            <button class="btn btn-secondary w-100 mt-3 mb-5" type="submit">Apply Filters</button>
+            <!-- caffeine -->
+            <div>
+                <label class="form-label">Caffeine</label> <br />
+                <input id="sugarRange" name="caffeine" />
+            </div>
+
+            <!-- drink type -->
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="type_coffee" {% if request.args.get('type_coffee')
+                    %} checked {% endif %}>
+                <label class="form-check-label"></label>
+            </div>
+
+            <button class="btn btn-secondary w-100 mt-3 mb-5" type="submit">Apply
+                Filters
+            </button>
         </div>
 
         <!-- main content -->
@@ -79,7 +88,8 @@
                                     <form action="{{ url_for('add_favorite') }}" method="POST" class="mb-3">
                                         <input type="hidden" name="drink_id" value="{{ drink.drink_id }}">
                                         <!-- add to favorites -->
-                                        <button class="btn btn-warning w-100" type="submit">★ Add to Favorites</button>
+                                        <button class="btn btn-warning w-100" type="submit">★ Add to
+                                            Favorites</button>
                                     </form>
                                     {% endif %}
 
@@ -154,5 +164,15 @@
 
     </ul>
 </nav>
+
+<script>
+    const calorieRange = new Slider("#calorieRange", {
+        min: 5, max: 250, value: [80, 150], range: true
+    });
+
+    const sugarRange = new Slider("#sugarRange", {
+        min: 5, max: 250, value: [80, 150], range: true
+    });
+</script>
 
 {% endblock %}
