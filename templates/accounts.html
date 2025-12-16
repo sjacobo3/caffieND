@@ -29,15 +29,89 @@
         <div class="card p-4 mx-auto" style="max-width: 700px;">
             <h3>Your Caffeine Log</h3>
             {% if caffeine_logs %}
-            <ul class="list-group">
-                {% for log in caffeine_logs %}
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>{{ log.consumed_at.strftime("%m-%d-%Y") }}</span>
-                    <span>{{ log.drink.name }}</span>
-                    <span>{{ log.caffeine_consumed }}</span>
+
+            <ul class="nav nav-tabs mb-3" id="caffeineTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#all" type="button">All</button>
                 </li>
-                {% endfor %}
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#day" type="button">Day</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#week" type="button">Week</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#month" type="button">Month</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#year" type="button">Year</button>
+                </li>
             </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="all">
+                    <ul class="list-group">
+                        {% for log in caffeine_logs %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ log.consumed_at.strftime("%m-%d-%Y") }}</span>
+                            <span>{{ log.drink.name }}</span>
+                            <span>{{ log.caffeine_consumed }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="tab-pane fade" id="day">
+                    <ul class="list-group">
+                        {% for log in caffeine_logs %}
+                            {% if log.consumed_at.date() == today %}
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ log.consumed_at.strftime("%m-%d-%Y") }}</span>
+                                <span>{{ log.drink.name }}</span>
+                                <span>{{ log.caffeine_consumed }}</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="tab-pane fade" id="week">
+                    <ul class="list-group">
+                        {% for log in week_logs %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ log.consumed_at.strftime("%m-%d-%Y") }}</span>
+                            <span>{{ log.drink.name }}</span>
+                            <span>{{ log.caffeine_consumed }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="tab-pane fade" id="month">
+                    <ul class="list-group">
+                        {% for log in caffeine_logs %}
+                            {% if log.consumed_at.date().month == today.month and log.consumed_at.date().year == today.year %}
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ log.consumed_at.strftime("%m-%d-%Y") }}</span>
+                                <span>{{ log.drink.name }}</span>
+                                <span>{{ log.caffeine_consumed }}</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="tab-pane fade" id="year">
+                    <ul class="list-group">
+                        {% for log in caffeine_logs %}
+                            {% if log.consumed_at.year == today.year %}
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ log.consumed_at.strftime("%m-%d-%Y") }}</span>
+                                <span>{{ log.drink.name }}</span>
+                                <span>{{ log.caffeine_consumed }}</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
             {% else %}
             <p class="text-muted">No caffeine logged yet.</p>
             {% endif %}
