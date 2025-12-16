@@ -1,6 +1,7 @@
 body {
-	margin: 0 auto;
+	padding-top: 80px;
 }
+
 .title {
 	font-size: 60px;
 	font-weight: bold;
@@ -9,61 +10,67 @@ body {
 	font-family: 'Dancing Script', cursive;
 }
 
-.navbar {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	background-color: #0c0246;	
-	padding: 12px 0;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+.custom-navbar {
+	position: fixed;
+	top: 0;
+	width: 100%;
+	z-index: 100;
+	background: linear-gradient(135deg, #0c0246, #3b3658);
 }
 
-.tab {
-	display: inline-block;
-	background-color: #ab0a43;
-	color: white;
-	padding: 8px 10px;	
-	margin: 0 8px;
-	border-radius: 8px;
-	font-size: 18px;
-	text-decoration: none;
+.brand-font {
+	font-size: 2rem;
+	font-family: 'Dancing Script', cursive;
+	color: #ab0a43 !important;
+}
+
+.nav-item.base {
+	padding: 8px 14px;
+	border-radius: 20px;
 	transition: all 0.3s ease;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.tab:hover {
-	background-color: #d2185b;
-	transform: translateY(-3px);
-	box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+.nav-item.base a {
+	color: #f5f5f5 !important;
+	text-decoration: none;
 }
 
-.tab.active {
-	background-color: #ff2a6d;
-	box-shadow: 0 6px 12px rgba(0,0,0,0.4);
-	transform: translateY(-2px);
+.nav-item.base:hover {
+	background-color: rgb(210, 170, 185, 0.25);
+	color: #ab0a43 !important;
 }
+
+.nav-item.base a.active {
+	color: #ab0a43 !important;
+	font-weight: 600;
+}
+
 
 .leaderboard-header {
-    background-color: #ab0a43 !important;
-    color: white !important;
+	background-color: #ab0a43 !important;
+	color: white !important;
 }
 
 .caffeine-card {
 	position: absolute;
 	height: 100vh;
-    width: 30%;
-    margin-left: auto;    
-    margin-right: 0;
-    padding: 40px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+	width: 30%;
+	margin-left: auto;
+	margin-right: 0;
+	padding: 40px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 	display: flex;
-  	flex-direction: column; /* Stacks content and actions vertically */
-  	justify-content: space-between; /* Pushes actions to the bottom */
+	flex-direction: column;
+	/* Stacks content and actions vertically */
+	justify-content: space-between;
+	/* Pushes actions to the bottom */
 }
 
 .card-actions {
-  margin-top: auto; /* Pushes the actions div to the bottom */
-  text-align: center; /* Centers the button horizontally */
+	margin-top: auto;
+	/* Pushes the actions div to the bottom */
+	text-align: center;
+	/* Centers the button horizontally */
 }
 
 .card-content {
@@ -71,4 +78,16 @@ body {
 	font-size: 30px;
 }
 
+.nav-pills .nav-link.active {
+	background-color: #0c0246 !important;
+	color: white !important;
+}
 
+.nav-pills .nav-link {
+	color: #0c0246 !important
+}
+
+.nav-pills .nav-link:hover {
+	background-color: rgb(10, 5, 70, 0.25) !important;
+	color: #0c0246 !important;
+}

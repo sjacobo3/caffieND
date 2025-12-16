@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 import os
 from models import Drinks, Users, User_Details, GenderEnum, app, db
-from sqlalchemy import func, desc 
+from sqlalchemy import func, desc, or_
 from datetime import datetime, timezone
 from functools import wraps
 import random
@@ -53,7 +53,7 @@ class Drink_Ratings(db.Model):
     drink_id = db.Column(db.Integer)
     user_id = db.Column(db.Integer)
     rating = db.Column(db.SmallInteger)
-    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=datetime.now())
 
 class User_Details(db.Model):
     __tablename__ = 'user_details'
@@ -63,12 +63,15 @@ class User_Details(db.Model):
     weight = db.Column(db.Numeric(10, 2))
     caffeine_max = db.Column(db.Integer)
 
-class Favorite_Drinks(db.Model):
-    __tablename__ = 'favorite_drinks'
+class Drink_Favorites(db.Model):
+    __tablename__ = 'drink_favorites'
     fav_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'))
-    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())   
+
+    user = db.relationship('Users', backref=db.backref('favorites'))
+    drink = db.relationship('Drinks', backref=db.backref('favorited_by'))
 
 class Caffeine_Log(db.Model):
     __tablename__ = 'caffeine_log'
@@ -77,7 +80,10 @@ class Caffeine_Log(db.Model):
     drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'))
     drink_ml = db.Column(db.Integer)
     caffeine_consumed = db.Column(db.Integer)
-    consumed_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    consumed_at = db.Column(db.DateTime, default=datetime.now())
+
+    user = db.relationship('Users', backref=db.backref('caffeine_logs'))
+    drink = db.relationship('Drinks', backref=db.backref('caffeine_logs'))
 
 def login_required(f):
     @wraps(f)
@@ -91,28 +97,23 @@ def login_required(f):
 
 @app.route("/")
 def home():
-    #get user inputs for search 
-    userinput_query = request.args.get('name', None)
-    userinput_category = request.args.get('category', 'name')
+    user_id = session['user_id'] if 'user_id' in session else None
+
+    q = request.args.get('q')
+    low_cal = request.args.get('low_cal')
+    low_caffeine = request.args.get('low_caffeine')
 
     #get all drink data 
     drinks = Drinks.query
 
-    if userinput_query: 
-        if userinput_category == 'name':
-            drinks = drinks.filter(func.lower(Drinks.name).contains(userinput_query.lower()))
-        elif userinput_category == 'calories': 
-            if userinput_query.isdigit():
-                drinks = drinks.filter(Drinks.calories == int(userinput_query))
-            else: 
-                drinks = drinks.filter(False)
-        elif userinput_category == 'caffeine_amt': 
-            if userinput_query.isdigit(): 
-                drinks = drinks.filter(Drinks.caffeine_amt == int(userinput_query))
-            else: 
-                drinks = drinks.filter(False)
-        else:
-            drinks = drinks.filter(False)
+    if q: 
+        drinks = drinks.filter(func.lower(Drinks.name).contains(q.lower()))
+
+    # filters
+    if low_cal:
+        drinks = drinks.filter(Drinks.calories <= 100)
+    if low_caffeine:
+        drinks = drinks.filter(Drinks.caffeine_amt <= 50)
 
     # pagination
     page = request.args.get('page', 1, type=int)
@@ -121,23 +122,43 @@ def home():
     pagination = drinks.paginate(page=page, per_page=per_page, error_out=False)
     items = pagination.items
 
-    return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination, query=userinput_query, category=userinput_category)
+    # get user favorites if logged in
+    user_favorites = Drink_Favorites.query.filter_by(user_id=user_id).all() if user_id else []
+    user_favorite_ids = {fav.drink_id for fav in user_favorites}
+
+    return render_template('home.html', drinks=items, active_tab='home', pagination=pagination, user_favorites=user_favorite_ids)
 
 @app.post("/add_favorite")
 @login_required
 def add_favorite():
     user_id = session['user_id']
-    drink_id = request.form.get('drink_id')
+    drink_id = request.form.get('drink_id', type=int)
 
-    exists = Favorite_Drinks.query.filter_by(user_id=user_id, drink_id=drink_id).first()
+    exists = Drink_Favorites.query.filter_by(user_id=user_id, drink_id=drink_id).first()
     if exists:
         flash("Drink is already in your favorites.")
         return redirect(url_for('home'))
 
-    new_favorite = Favorite_Drinks(user_id=user_id, drink_id=drink_id)
+    new_favorite = Drink_Favorites(user_id=user_id, drink_id=drink_id)
     db.session.add(new_favorite)
     db.session.commit()
     flash("Added to favorites!", 'success')
+    return redirect(url_for('home'))
+
+@app.post("/remove_favorite")
+@login_required
+def remove_favorite():
+    user_id = session['user_id']
+    drink_id = request.form.get('drink_id', type=int)
+
+    exists = Drink_Favorites.query.filter_by(user_id=user_id, drink_id=drink_id).first()
+    if exists:
+        db.session.delete(exists)
+        db.session.commit()
+        flash("Removed from favorites!", 'success')
+        return redirect(url_for('home'))
+
+    flash("Drink is not in your favorites.")
     return redirect(url_for('home'))
 
 @app.route("/log_drink", methods=["POST"])
@@ -160,7 +181,6 @@ def log_drink():
 
 @app.route("/leaderboard")
 def leaderboard():
-   
     #get selected category (default overall)
     category = request.args.get('leadertype', 'overall')
           
@@ -272,57 +292,87 @@ def leaderboard():
                          leadertype=category)
 
 
-@app.route("/recommendation")
+@app.route("/recommendation", methods=["GET", "POST"])
 @login_required
 def recommendation():
-    # get user inputs for search 
-    category = request.args.get('category')
-    timeofday = request.args.get('timeofday')
-    calories = request.args.get('amount') 
-
+    user = session['user_id']
     
-    #get all drink data 
-    drinks = Drinks.query
+    if request.method == "POST":
+        # get user inputs from form
+        mood = request.form.get("mood")
+        flavor = request.form.get("flavor")
+        calorie_pref = request.form.get("calorie_pref")
+        sugar_pref = request.form.get("sugar_pref")
+        similarity = request.form.get("similarity")
+        
+        # base query
+        query = db.session.query(Drinks)
 
-    show_limit = request.args.get("show") == "1"
+        # filter based on mood (Caffeine in mg) 
+        if mood == "night":
+            query = query.filter(Drinks.caffeine_amt.between(80, 200))
+        elif mood == "morning":
+            query = query.filter(Drinks.caffeine_amt.between(30, 100))
+        elif mood == "gym":
+            query = query.filter(Drinks.caffeine_amt.between(150, 300))
+        elif mood == "refresh":
+            query = query.filter(Drinks.caffeine_amt < 100)
+        
+        # filter based on flavor
+        if flavor and flavor != "no-pref":
+            query = query.filter(or_(*[Drinks.flavor.ilike(f"%{flavor}%")]))
 
-    if "user_id" in session: 
-      user_id = session.get('user_id')
-      # check if the user already has information
-      user_details = User_Details.query.filter_by(user_id=user_id).first()     
+        # filter based on calorie preference
+        if calorie_pref == "low-cal":
+            query = query.filter(Drinks.calories < 50)
+        elif calorie_pref == "med-cal":
+            query = query.filter(Drinks.calories.between(50, 150))
+        elif calorie_pref == "high-cal":
+            query = query.filter(Drinks.calories > 150)
 
-    # max caffeine per day calculation
-    user_details.caffeine_max = float(user_details.weight) * 2.5
-    filters = []
+        # filter based on sugar preference (Sugar in grams, ranges to match button labels: <50, 50-150, >150)
+        # High Sugar: Over 11.25g per 100ml
+        # Medium Sugar (Amber): 5g to 22.5g per 100g/ml.
+        # Low Sugar (Green): 5g or less per 100g/ml.
+        if sugar_pref == "low-sugar":
+            query = query.filter(Drinks.sugar_g < 5)
+        elif sugar_pref == "med-sugar":
+            query = query.filter(Drinks.sugar_g.between(6, 15))
+        elif sugar_pref == "high-sugar":
+            query = query.filter(Drinks.sugar_g > 15)
 
-    # match your lowercase categories
-    if category in ["coffee", "tea", "energy", "water"]:
-        filters.append(Drinks.category == category)
-    if calories:
-        filters.append(Drinks.calories == calories)
+        # filter based on similarity preference
+        if similarity == "favorites":
+            # get user's top rated drinks
+            top_rated = db.session.query(
+                Drink_Ratings.drink_id
+                ).filter(
+                    Drink_Ratings.user_id == user
+                    ).order_by(
+                        desc(Drink_Ratings.rating)
+                        ).limit(5).all()
+        
+            top_rated_ids = [drink_id for (drink_id,) in top_rated]
+            
+            if top_rated_ids:
+                # get flavors of top rated drinks
+                favored_flavors = db.session.query(
+                    Drinks.flavor
+                    ).filter(
+                        Drinks.drink_id.in_(top_rated_ids)
+                        ).all()
+            # Extract the first flavor from potentially comma-separated string
+            favored_flavor_list = [flavor.split(',')[0].strip() for (flavor,) in favored_flavors if flavor]
+            
+            if favored_flavor_list:
+                # filter drinks to match favored flavors
+                query = query.filter(Drinks.flavor.in_(favored_flavor_list))
+            
+        drinks = query.limit(3).all()
+        
+        return render_template('recommend.html', active_tab='recommendation', recommendation=drinks)
 
-    if timeofday == "morning":
-        filters.append(Drinks.caffeine_amt >= 150)
-    elif timeofday == "afternoon":
-        filters.append(Drinks.caffeine_amt.between(100, 150))
-    elif timeofday == "night":
-        filters.append(Drinks.caffeine_amt < 100)
-
-    query = drinks.filter(*filters)
-    result = query.all()
-
-    # Random pick from list of valid drinks
-    if len(result) >= 3:
-        recommendation = random.sample(result, 3)
-    else:
-        recommendation = result
-
-
-    return render_template('recommend.html', active_tab='recommendation', 
-                           recommendation=recommendation, 
-                           timeofday=timeofday, calories=calories, 
-                           category=category, show_limit=show_limit, 
-                           user_details=user_details)
+    return render_template('recommend.html', active_tab='recommendation',  recommendation=None)
 
 @app.route("/accounts")
 @login_required
@@ -330,7 +380,13 @@ def accounts():
     user_id = session.get('user_id')
     user_details = User_Details.query.filter_by(user_id=user_id).first()
 
-    return render_template('accounts.html', active_tab='accounts', user_details=user_details)
+    # fetch caffeine logs
+    logs = Caffeine_Log.query.filter_by(user_id=user_id).order_by(Caffeine_Log.consumed_at.desc()).all()
+    
+    # fetch favorite drinks
+    favorites = Drink_Favorites.query.filter_by(user_id=user_id).join(Drinks).all()
+
+    return render_template('accounts.html', active_tab='accounts', user_details=user_details, caffeine_logs=logs, favorites=favorites)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
