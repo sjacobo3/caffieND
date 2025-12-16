@@ -55,27 +55,26 @@ class Drink_Ratings(db.Model):
 @app.route("/")
 def home():
     #get user inputs for search 
-    userinput_query = request.args.get('name', None)
-    userinput_category = request.args.get('category', 'name')
+    drink_name = request.args.get('', None)
+    calorie_min = request.args.get('', None)
+    calorie_max = request.args.get('', None)
+    caffiene_min = request.args.get('', None)
+    caffiene_max = request.args.get('', None)
 
-    #get all drink data 
-    drinks = Drinks.query
+    #check for inputs 
+    if calorie_min == None: 
+        calorie_min = 0
+    if calorie_max == None: 
+        calorie_max = 1000000
+    if caffiene_min == None: 
+        caffiene_min = 0
+    if caffiene_max == None: 
+        caffiene_max = 0 
+    if drink_name == None: 
+        drink_name == ""
 
-    if userinput_query: 
-        if userinput_category == 'name':
-            drinks = drinks.filter(func.lower(Drinks.name).contains(userinput_query.lower()))
-        elif userinput_category == 'calories': 
-            if userinput_query.isdigit():
-                drinks = drinks.filter(Drinks.calories == int(userinput_query))
-            else: 
-                drinks = drinks.filter(False)
-        elif userinput_category == 'caffeine_amt': 
-            if userinput_query.isdigit(): 
-                drinks = drinks.filter(Drinks.caffeine_amt == int(userinput_query))
-            else: 
-                drinks = drinks.filter(False)
-        else:
-            drinks = drinks.filter(False)
+    #filter drinks by criteria
+    drinks = db.session.query(Drinks).filter(func.lower(Drinks.name).contains(drink_name.lower()).filter(Drinks.calories > calorie_min).filter(Drinks.calories < calorie_max).filter(Drinks.caffiene > caffiene_min).filter(Drinks.caffiene < caffiene_max)).all()
 
     # pagination
     page = request.args.get('page', 1, type=int)
@@ -84,7 +83,7 @@ def home():
     pagination = drinks.paginate(page=page, per_page=per_page, error_out=False)
     items = pagination.items
 
-    return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination, query=userinput_query, category=userinput_category)
+    return render_template('home_page.html', drinks=items, active_tab='home', pagination=pagination)
 
 
 @app.route("/leaderboard")
@@ -292,4 +291,4 @@ def password():
 
 if __name__ == '__main__':
     app.debug = True
-    app.run(host='0.0.0.0', port=5031)
+    app.run(host='0.0.0.0', port=5030)
