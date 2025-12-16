@@ -97,6 +97,9 @@ def login_required(f):
 
 @app.route("/")
 def home():
+
+    user_id = session['user_id'] if 'user_id' in session else None
+
     #get user inputs for search 
     drink_name = request.args.get('', None)
     calorie_min = request.args.get('', None)
