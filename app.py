@@ -97,23 +97,27 @@ def login_required(f):
 
 @app.route("/")
 def home():
-    user_id = session['user_id'] if 'user_id' in session else None
+    #get user inputs for search 
+    drink_name = request.args.get('', None)
+    calorie_min = request.args.get('', None)
+    calorie_max = request.args.get('', None)
+    caffiene_min = request.args.get('', None)
+    caffiene_max = request.args.get('', None)
 
-    q = request.args.get('q')
-    low_cal = request.args.get('low_cal')
-    low_caffeine = request.args.get('low_caffeine')
+    #check for inputs 
+    if calorie_min == None: 
+        calorie_min = 0
+    if calorie_max == None: 
+        calorie_max = 1000000
+    if caffiene_min == None: 
+        caffiene_min = 0
+    if caffiene_max == None: 
+        caffiene_max = 0 
+    if drink_name == None: 
+        drink_name == ""
 
-    #get all drink data 
-    drinks = Drinks.query
-
-    if q: 
-        drinks = drinks.filter(func.lower(Drinks.name).contains(q.lower()))
-
-    # filters
-    if low_cal:
-        drinks = drinks.filter(Drinks.calories <= 100)
-    if low_caffeine:
-        drinks = drinks.filter(Drinks.caffeine_amt <= 50)
+    #filter drinks by criteria
+    drinks = db.session.query(Drinks).filter(func.lower(Drinks.name).contains(drink_name.lower()).filter(Drinks.calories > calorie_min).filter(Drinks.calories < calorie_max).filter(Drinks.caffiene > caffiene_min).filter(Drinks.caffiene < caffiene_max)).all()
 
     # pagination
     page = request.args.get('page', 1, type=int)
