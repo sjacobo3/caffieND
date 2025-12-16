@@ -13,25 +13,38 @@
         <!-- filters -->
         <div class="col-md-3">
             <h5>Filters:</h5>
-            <!-- calories -->
-            <div>
-                <label class="form-label">Calories</label> <br />
-                <input id="calorieRange" type="text" name="calories" />
 
-            </div>
+	    <!-- calories -->
+	    <div class="row g-3 mb-3"> 
+		    <h6>Calories:</h6>
+	            <div class="col mt-0">
+			    <input type="text" class="form-control " placeholder="min" />
+	            </div>
+		    <div class="col mt-0">
+			    <input type="text" class="form-control" placeholder="max" />
+		    </div>
+	    </div>
 
-            <!-- caffeine -->
-            <div>
-                <label class="form-label">Caffeine</label> <br />
-                <input id="sugarRange" name="caffeine" />
-            </div>
+            <!-- caffeine --> 
+	    <div class="row g-3"> 
+		    <h6>Caffeine:</h6>
+	            <div class="col mt-0">
+			    <input type="text" class="form-control " placeholder="min" />
+	            </div>
+		    <div class="col mt-0">
+			    <input type="text" class="form-control" placeholder="max" />
+		    </div>
+	    </div>
 
-            <!-- drink type -->
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="type_coffee" {% if request.args.get('type_coffee')
-                    %} checked {% endif %}>
-                <label class="form-check-label"></label>
-            </div>
+	   <!-- drink type -->
+	   <div class="form-check">
+		{% for type in drink_types %}
+		<input class="form-check-input" type="checkbox" name="{{ type }}" {% if request.args.get('') %}checked{% endif %} />
+		<label class="form-check-label">{{ type }}</label>
+		{% endfor %}
+	   </div>
+
+            
 
             <button class="btn btn-secondary w-100 mt-3 mb-5" type="submit">Apply
                 Filters
