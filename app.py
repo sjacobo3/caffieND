@@ -44,6 +44,7 @@ def home():
     calorie_max = request.args.get('calorie_max', type=int)
     caffeine_min = request.args.get('caffeine_min', type=int)
     caffeine_max = request.args.get('caffeine_max', type=int)
+    selected_types = request.args.getlist('drink_type')
 
     #check for inputs 
     if calorie_min == None: 
@@ -67,6 +68,9 @@ def home():
     Drinks.caffeine_amt <= caffeine_max
     )
 
+    if selected_types:
+        query = query.filter(Drinks.category.in_(selected_types))
+
     # pagination
     page = request.args.get('page', 1, type=int)
     per_page = 20
@@ -78,9 +82,14 @@ def home():
     user_favorites = Drink_Favorites.query.filter_by(user_id=user_id).all() if user_id else []
     user_favorite_ids = {fav.drink_id for fav in user_favorites}
 
-    return render_template('home.html', drinks=items, active_tab='home', pagination=pagination, user_favorites=user_favorite_ids)
+    user_ratings = Drink_Ratings.query.filter_by(user_id=user_id).all() if user_id else []
+    user_rating_ids = {r.drink_id: r.rating for r in user_ratings}
+    drink_types = [t[0] for t in db.session.query(Drinks.category).distinct().all()] # get distinct drink types
 
-@app.post("/add_favorite")
+
+    return render_template('home.html', drinks=items, active_tab='home', pagination=pagination, user_favorites=user_favorite_ids, user_ratings=user_rating_ids, drink_types=drink_types)
+
+@app.route("/add_favorite", methods=["POST"])
 @login_required
 def add_favorite():
     user_id = session['user_id']
@@ -97,7 +106,7 @@ def add_favorite():
     flash("Added to favorites!", 'success')
     return redirect(url_for('home'))
 
-@app.post("/remove_favorite")
+@app.route("/remove_favorite", methods=["POST"])
 @login_required
 def remove_favorite():
     user_id = session['user_id']
@@ -311,8 +320,8 @@ def recommendation():
     user_details = User_Details.query.filter_by(user_id=user).first()  
     recommendation = []   
 
-    # max caffeine per day calculation
-    user_details.caffeine_max = float(user_details.weight) * 2.5
+    # max caffeine per day calculation - recommended 3-6 mg per kg (2.2) lbs
+    user_details.caffeine_max = 3 * (float(user_details.weight) / 2.2)
     db.session.commit()  # commit update
 
     with db.session.no_autoflush:
@@ -362,9 +371,9 @@ def recommendation():
         if sugar_pref == "low-sugar":
             query = query.filter(Drinks.sugar_g < 5)
         elif sugar_pref == "med-sugar":
-            query = query.filter(Drinks.sugar_g.between(6, 15))
+            query = query.filter(Drinks.sugar_g.between(6, 40))
         elif sugar_pref == "high-sugar":
-            query = query.filter(Drinks.sugar_g > 15)
+            query = query.filter(Drinks.sugar_g > 40)
 
         # filter based on similarity preference
         if similarity == "favorites":
