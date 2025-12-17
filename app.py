@@ -245,7 +245,7 @@ def leaderboard():
         ).join(
           Drinks, Drinks.drink_id == Drink_Ratings.drink_id
         ).filter(
-            Drinks.category == 'Energy'
+            Drinks.category.like('%Energy%')
         ).group_by(
             Drink_Ratings.drink_id
         ).order_by(
@@ -265,6 +265,21 @@ def leaderboard():
         ).order_by(
             desc('avg_rating')
         ).limit(10).all()
+
+    elif category == 'soft drink':
+        top_drinks = db.session.query(
+            Drink_Ratings.drink_id,
+            func.avg(Drink_Ratings.rating).label('avg_rating')
+        ).join(
+            Drinks, Drinks.drink_id == Drink_Ratings.drink_id 
+        ).filter(
+            Drinks.category == 'Soft Drink'
+        ).group_by(
+            Drink_Ratings.drink_id
+        ).order_by(
+            desc('avg_rating')
+        ).limit(10).all()
+
 
     elif category == 'brands':
             top_drinks = db.session.query(

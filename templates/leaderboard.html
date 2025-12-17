@@ -7,12 +7,13 @@
 <form action="/leaderboard" method="GET" class="mb-4">
     <div class="input-group">
         <select class="form-select" name="leadertype">
-            <option value="overall" {% if leadertype=='overall' %} selected {% endif %}>Overall</option>
             <option value="coffee" {% if leadertype=='coffee' %} selected {% endif %}>Coffee</option>
-            <option value="tea" {% if leadertype=='tea' %} selected {% endif %}>Tea</option>
-            <option value="energy" {% if leadertype=='energy' %} selected {% endif %}>Energy</option>
-            <option value="water" {% if leadertype=='water' %} selected {% endif %}>Water</option>
             <option value="brands" {% if leadertype=='brands' %} selected {% endif %}>Brands</option>
+            <option value="energy" {% if leadertype=='energy' %} selected {% endif %}>Energy</option>
+            <option value="overall" {% if leadertype=='overall' %} selected {% endif %}>Overall</option>
+            <option value="soft drink" {% if leadertype=='soft drink' %} selected {% endif %}>Soft Drink</option>
+            <option value="tea" {% if leadertype=='tea' %} selected {% endif %}>Tea</option>
+            <option value="water" {% if leadertype=='water' %} selected {% endif %}>Water</option>
         </select>
 
         <button class="btn btn-primary" type="submit">Search</button>
@@ -86,7 +87,7 @@
                         </strong>
                     </td>
                     <td><strong>{{ item.drink.name }}</strong></td>
-                    <td class="text-center">{{ item.drink.caffeine_type }}</td>
+                    <td class="text-center">{{ item.drink.category }}</td>
                     <td class="text-center">{{ item.drink.caffeine_amt }} mg</td>
                     <td class="text-center">
                         <span class="badge bg-success">⭐ {{ item.avg_rating }}</span>
