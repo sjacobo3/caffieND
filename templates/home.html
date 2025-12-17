@@ -120,6 +120,21 @@
                                                 name="drink_ml" required min="1">
                                         </div>
 
+                                        <div class="mb-3">
+                                            <label for="drink_hour-{{ drink.drink_id }}" class="form-label">Time of Consumption</label>
+                                            <select class="form-select" id="drink_hour-{{ drink.drink_id }}"name="drink_hour" required>
+                                                <option value="" disabled selected>Select hour</option>
+                                                {% for hour in range(0, 24) %}
+                                                    {% set display_hour = hour % 12 %}
+                                                    {% if display_hour == 0 %}
+                                                        {% set display_hour = 12 %}
+                                                    {% endif %}
+                                                    {% set ampm = 'AM' if hour < 12 else 'PM' %}
+                                                    <option value="{{ hour }}">{{ display_hour }}:00 {{ ampm }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
                                         <div class="d-grid">
                                             <button type="submit" class="btn btn-success">✓ Log This Drink</button>
                                         </div>
