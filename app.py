@@ -142,6 +142,38 @@ def log_drink():
     flash("Drink logged!", 'success')
     return redirect(url_for('home'))
 
+@app.route("/rate_drink", methods=['POST'])
+@login_required
+def rate_drink():
+    user_id = session['user_id']
+    drink_id = request.form.get('drink_id')
+    rating = request.form.get('rate_id')
+
+    # ensure rating is valid (between 1-5, 1 decimal place)
+    try:
+        rating = float(rating)
+        if rating < 1 or rating > 5:
+            raise ValueError
+        
+        if round(rating, 1) != rating:
+            raise ValueError
+        
+    except ValueError:
+        flash("Rating must be between 1 and 5 and be at most 1 decimal place/")
+        return redirect(url_for('home'))
+    
+    existing_rate = Drink_Ratings.query.filter_by(user_id=user_id, drink_id=drink_id).first()
+    if existing_rate:
+        existing_rate.rating = rating
+        flash("Your rating has been updated.")
+    else:
+        new_rating = Drink_Ratings(user_id=user_id, drink_id=drink_id, rating=rating)
+        db.session.add(new_rating)
+        flash("Your drink rating has been recorded!", 'success')
+
+    db.session.commit()
+    return redirect(url_for('home'))
+
 @app.route("/leaderboard")
 def leaderboard():
     #get selected category (default overall)
