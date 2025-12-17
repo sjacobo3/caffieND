@@ -78,7 +78,11 @@ def home():
     user_favorites = Drink_Favorites.query.filter_by(user_id=user_id).all() if user_id else []
     user_favorite_ids = {fav.drink_id for fav in user_favorites}
 
-    return render_template('home.html', drinks=items, active_tab='home', pagination=pagination, user_favorites=user_favorite_ids)
+    # get user's ratings if logged in
+    user_ratings = Drink_Ratings.query.filter_by(user_id=user_id).all() if user_id else []
+    user_rating_ids = {rate.drink_id for rate in user_ratings}
+
+    return render_template('home.html', drinks=items, active_tab='home', pagination=pagination, user_favorites=user_favorite_ids, user_ratings=user_rating_ids)
 
 @app.post("/add_favorite")
 @login_required
@@ -127,12 +131,45 @@ def log_drink():
     caffeine_consumed = (drink.caffeine_amt / drink.volume) * int(drink_ml)
     time_consumed = drink_hour
 
-
     new_log = Caffeine_Log(user_id=user_id, drink_id=drink_id, drink_ml=drink_ml, caffeine_consumed=caffeine_consumed, drink_hour=time_consumed)
     db.session.add(new_log)
     db.session.commit()
     flash("Drink logged!", 'success')
     return redirect(url_for('home'))
+
+@app.route("/rate_drink", methods=['POST'])
+@login_required
+def rate_drink():
+    user_id = session['user_id']
+    drink_id = request.form.get('drink_id')
+    rating = request.form.get('rate_id')
+
+    # ensure rating is valid (between 1-5, 1 decimal place)
+    try:
+        rating = float(rating)
+        if rating < 1 or rating > 5:
+            raise ValueError
+        
+        if round(rating, 1) != rating:
+            raise ValueError
+        
+    except ValueError:
+        flash("Rating must be between 1 and 5 and be at most 1 decimal place/")
+        return redirect(url_for('home'))
+    
+    exists = Drink_Ratings.query.filter_by(user_id=user_id, drink_id=drink_id).first()
+    if exists:
+        exists.rating = rating
+        flash("Your rating has been updated.")
+    else:
+        new_rating = Drink_Ratings(user_id=user_id, drink_id=drink_id, rating=rating)
+        db.session.add(new_rating)
+        flash("Your drink rating has been recorded!", 'success')
+
+
+    db.session.commit()
+    return redirect(url_for('home'))
+
 
 @app.route("/leaderboard")
 def leaderboard():
