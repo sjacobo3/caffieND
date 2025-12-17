@@ -495,7 +495,7 @@ def accounts():
         ax = fig.subplots()
         ax.plot(times, levels, color='teal', marker='o', label='Caffeine Level')
         ax.fill_between(times, levels, color='teal', alpha=0.2)
-        ax.set_title("Caffeine Half-Life Over Time")
+        ax.set_title("How Long Does Caffeine Last in my Body?")
         ax.set_xlabel("Hours since first drink")
         ax.set_ylabel("Caffeine remaining (mg)")
         ax.set_ylim(bottom=0)
