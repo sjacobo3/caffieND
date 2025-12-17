@@ -30,7 +30,6 @@
             {% if caffeine_logs %}
 
             <ul class="nav nav-tabs mb-3" id="caffeineTabs" role="tablist">
-                
                 <li class="nav-item">
                     <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#day" type="button">Day</button>
                 </li>
@@ -51,8 +50,6 @@
 
 
             <div class="tab-content">
-            
-
                 <div class="tab-pane fade show active" id="day">
                     <ul class="list-group">
                         {% for log in caffeine_logs %}
@@ -105,7 +102,7 @@
                         {% endfor %}
                     </ul>
                 </div>
-                <div class="tab-pane fade show active" id="all">
+                <div class="tab-pane fade" id="all">
                     <ul class="list-group">
                         {% for log in caffeine_logs %}
                         <li class="list-group-item d-flex justify-content-between">
