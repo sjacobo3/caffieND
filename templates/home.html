@@ -18,45 +18,42 @@
 	    <div class="row g-3 mb-3"> 
 		    <h6>Calories:</h6>
 	            <div class="col mt-0">
-			    <input type="text" class="form-control " placeholder="min" />
+                    <input type="text" class="form-control" name="calorie_min" placeholder="min" value="{{ request.args.get('calorie_min','') }}" />
 	            </div>
-		    <div class="col mt-0">
-			    <input type="text" class="form-control" placeholder="max" />
-		    </div>
+                <div class="col mt-0">
+                    <input type="text" class="form-control" name="calorie_max" placeholder="max" value="{{ request.args.get('calorie_max','') }}" />
+                </div>
 	    </div>
 
             <!-- caffeine --> 
 	    <div class="row g-3"> 
 		    <h6>Caffeine:</h6>
 	            <div class="col mt-0">
-			    <input type="text" class="form-control " placeholder="min" />
+			        <input type="text" class="form-control" name="caffeine_min" placeholder="min" value="{{ request.args.get('caffeine_min','') }}" />
 	            </div>
 		    <div class="col mt-0">
-			    <input type="text" class="form-control" placeholder="max" />
-		    </div>
-	    </div>
+			    <input type="text" class="form-control" name="caffeine_max" placeholder="max" value="{{ request.args.get('caffeine_max','') }}" />
+	        </div>
+        </div>
 
 	   <!-- drink type -->
-	   <div class="form-check">
-		{% for type in drink_types %}
-		<input class="form-check-input" type="checkbox" name="{{ type }}" {% if request.args.get('') %}checked{% endif %} />
-		<label class="form-check-label">{{ type }}</label>
-		{% endfor %}
-	   </div>
-
-            
-
-            <button class="btn btn-secondary w-100 mt-3 mb-5" type="submit">Apply
-                Filters
-            </button>
-        </div>
+    <div class="form-check">
+    {% for type in drink_types %}
+    <input class="form-check-input" type="checkbox" name="{{ type }}" {% if request.args.get('') %}checked{% endif %} />
+    <label class="form-check-label">{{ type }}</label>
+    {% endfor %}
+    </div>
+        <button class="btn btn-secondary w-100 mt-3 mb-5" type="submit">Apply
+            Filters
+        </button>
+    </div>
 
         <!-- main content -->
         <div class="col-md-9">
             <!-- search bar -->
             <div class="input-group mb-3">
-                <input type="text" class="form-control" name="q" placeholder="Search for a drink..."
-                    value="{{ request.args.get('q', '') }}">
+                <input type="text" class="form-control" name="drink_name" placeholder="Search for a drink..."
+                    value="{{ request.args.get('drink_name', '') }}">
                 <button class="btn btn-primary" type="submit">Search</button>
             </div>
 
@@ -166,7 +163,16 @@
 
         {% if pagination.has_prev %}
         <li class="page-item">
-            <a class="page-link" href="{{ url_for('home', page=pagination.prev_num) }}">Previous</a>
+            <a class="page-link"
+                href="{{ url_for('home',
+                                    page=pagination.prev_num,
+                                    drink_name=request.args.get('drink_name',''),
+                                    calorie_min=request.args.get('calorie_min',''),
+                                    calorie_max=request.args.get('calorie_max',''),
+                                    caffeine_min=request.args.get('caffeine_min',''),
+                                    caffeine_max=request.args.get('caffeine_max','')) }}">
+                Previous
+            </a>
         </li>
         {% else %}
         <li class="page-item disabled"><span class="page-link">Previous</span></li>
@@ -177,7 +183,18 @@
         {% if p == pagination.page %}
         <li class="page-item active"><span class="page-link">{{ p }}</span></li>
         {% else %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('home', page=p) }}">{{ p }}</a></li>
+        <li class="page-item">
+            <a class="page-link"
+                href="{{ url_for('home',
+                        page=p,
+                        drink_name=request.args.get('drink_name',''),
+                        calorie_min=request.args.get('calorie_min',''),
+                        calorie_max=request.args.get('calorie_max',''),
+                        caffeine_min=request.args.get('caffeine_min',''),
+                        caffeine_max=request.args.get('caffeine_max','')) }}">
+                {{ p }}
+            </a>
+        </li>
         {% endif %}
         {% else %}
         <li class="page-item disabled"><span class="page-link">…</span></li>
@@ -185,7 +202,18 @@
         {% endfor %}
 
         {% if pagination.has_next %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('home', page=pagination.next_num) }}">Next</a></li>
+        <li class="page-item">
+            <a class="page-link"
+                href="{{ url_for('home',
+                                    page=pagination.next_num,
+                                    drink_name=request.args.get('drink_name',''),
+                                    calorie_min=request.args.get('calorie_min',''),
+                                    calorie_max=request.args.get('calorie_max',''),
+                                    caffeine_min=request.args.get('caffeine_min',''),
+                                    caffeine_max=request.args.get('caffeine_max','')) }}">
+                Next
+            </a>
+        </li>
         {% else %}
         <li class="page-item disabled"><span class="page-link">Next</span></li>
         {% endif %}
