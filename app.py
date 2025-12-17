@@ -2,9 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 import os
-from models import Drinks, Users, User_Details, GenderEnum, app, db
+from models import Drinks, Users, User_Details, GenderEnum, Drink_Ratings, Drink_Favorites, Caffeine_Log, app, db
 from sqlalchemy import func, desc, or_
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date, timedelta
 from functools import wraps
 import random, io, base64
 from markupsafe import Markup
@@ -12,82 +12,16 @@ from collections import defaultdict
 from matplotlib.figure import Figure
 
 
-app = Flask(__name__)
+#app = Flask(__name__)
 
 
 # DATABASE CONFIGURATION
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://sjacobo3:newpassword@localhost/sjacobo3'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.urandom(24) # generate a random 24 byte string for the secret key for session cookies so it is not tampered with by client
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://sjacobo3:newpassword@localhost/sjacobo3'
+#app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+#app.config['SECRET_KEY'] = os.urandom(24) # generate a random 24 byte string for the secret key for session cookies so it is not tampered with by client
 
 # initialize SQLAlechemy
-db = SQLAlchemy(app)
-
-# MODELS
-class Drinks(db.Model):
-    __tablename__ = 'drinks'
-    drink_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    brand = db.Column(db.String(50))
-    name = db.Column(db.String(50))
-    flavor = db.Column(db.String(50))
-    volume = db.Column(db.Integer)
-    calories = db.Column(db.Integer)
-    caffeine_amt = db.Column(db.Integer)
-    category = db.Column(db.String(50))
-    sugar_g = db.Column(db.Integer)
-
-    def __repr__(self):
-        return f"<Drink {self.name}>"
-
-
-class Users(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    email = db.Column(db.String(50), nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-
-    def __repr__(self):
-        return f"<User {self.username}" 
-
-class Drink_Ratings(db.Model):
-    __tablename__ = 'drink_ratings'
-    rating_id = db.Column(db.Integer, primary_key=True)
-    drink_id = db.Column(db.Integer)
-    user_id = db.Column(db.Integer)
-    rating = db.Column(db.SmallInteger)
-    created_at = db.Column(db.DateTime, default=datetime.now())
-
-class User_Details(db.Model):
-    __tablename__ = 'user_details'
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    age = db.Column(db.Integer)
-    gender = db.Column(db.Enum(GenderEnum))
-    weight = db.Column(db.Numeric(10, 2))
-    caffeine_max = db.Column(db.Integer)
-
-class Drink_Favorites(db.Model):
-    __tablename__ = 'drink_favorites'
-    fav_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())   
-
-    user = db.relationship('Users', backref=db.backref('favorites'))
-    drink = db.relationship('Drinks', backref=db.backref('favorited_by'))
-
-class Caffeine_Log(db.Model):
-    __tablename__ = 'caffeine_log'
-    log_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'))
-    drink_ml = db.Column(db.Integer)
-    caffeine_consumed = db.Column(db.Integer)
-    drink_hour = db.Column(db.Integer)
-    consumed_at = db.Column(db.DateTime, default=datetime.now())
-
-    user = db.relationship('Users', backref=db.backref('caffeine_logs'))
-    drink = db.relationship('Drinks', backref=db.backref('caffeine_logs'))
+#db = SQLAlchemy(app)
 
 def login_required(f):
     @wraps(f)
@@ -531,7 +465,18 @@ def accounts():
     # fetch favorite drinks
     favorites = Drink_Favorites.query.filter_by(user_id=user_id).join(Drinks).all()
 
-    return render_template('accounts.html', active_tab='accounts', user_details=user_details, caffeine_logs=logs, favorites=favorites, caffeine_graph=caffeine_graph)
+    # get the actual dates of present time
+    today = date.today()
+
+    #calculation for week starting on Sunday
+    # 7 % 7 = 0 so sunday should have 0 days since sunday
+    days_since_Sunday = (today.weekday() + 1) % 7 # .weekday returns a number 0-6. add 1 to shift it so it starts on Sunday not Monday (which is 0)
+    week_start = today - timedelta(days=days_since_Sunday) # subtract the number of days from today to get sunday as the start
+    week_end = week_start + timedelta(days=6)
+
+    week_logs = [ lg for lg in logs if week_start <= lg.consumed_at.date() <= week_end]
+
+    return render_template('accounts.html', active_tab='accounts', user_details=user_details, caffeine_logs=logs, favorites=favorites, today=today, week_logs=week_logs, caffeine_graph=caffeine_graph)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
