@@ -6,7 +6,10 @@ from models import Drinks, Users, User_Details, GenderEnum, Drink_Ratings, Drink
 from sqlalchemy import func, desc, or_
 from datetime import datetime, timezone, date, timedelta
 from functools import wraps
-import random
+import random, io, base64
+from markupsafe import Markup
+from collections import defaultdict
+from matplotlib.figure import Figure
 
 
 #app = Flask(__name__)
@@ -19,7 +22,6 @@ import random
 
 # initialize SQLAlechemy
 #db = SQLAlchemy(app)
-
 
 def login_required(f):
     @wraps(f)
@@ -40,18 +42,18 @@ def home():
     drink_name = request.args.get('drink_name', default="", type=str)
     calorie_min = request.args.get('calorie_min', type=int)
     calorie_max = request.args.get('calorie_max', type=int)
-    caffiene_min = request.args.get('caffiene_min', type=int)
-    caffiene_max = request.args.get('caffiene_max', type=int)
+    caffeine_min = request.args.get('caffeine_min', type=int)
+    caffeine_max = request.args.get('caffeine_max', type=int)
 
     #check for inputs 
     if calorie_min == None: 
         calorie_min = 0
     if calorie_max == None: 
         calorie_max = 1000000
-    if caffiene_min == None: 
-        caffiene_min = 0
-    if caffiene_max == None: 
-        caffiene_max = 1000000
+    if caffeine_min == None: 
+        caffeine_min = 0
+    if caffeine_max == None: 
+        caffeine_max = 1000000
 
     query = db.session.query(Drinks)
     if drink_name:
@@ -61,8 +63,8 @@ def home():
     query = query.filter(
     Drinks.calories >= calorie_min,
     Drinks.calories <= calorie_max,
-    Drinks.caffeine_amt >= caffiene_min,
-    Drinks.caffeine_amt <= caffiene_max
+    Drinks.caffeine_amt >= caffeine_min,
+    Drinks.caffeine_amt <= caffeine_max
     )
 
     # pagination
@@ -117,13 +119,16 @@ def log_drink():
     user_id = session['user_id']
     drink_id = request.form.get('drink_id')
     drink_ml = request.form.get('drink_ml')
+    drink_hour = request.form.get('drink_hour')
 
     drink = Drinks.query.get(drink_id)
 
     # calculate caffeine consumed based on volume
     caffeine_consumed = (drink.caffeine_amt / drink.volume) * int(drink_ml)
+    time_consumed = drink_hour
 
-    new_log = Caffeine_Log(user_id=user_id, drink_id=drink_id, drink_ml=drink_ml, caffeine_consumed=caffeine_consumed)
+
+    new_log = Caffeine_Log(user_id=user_id, drink_id=drink_id, drink_ml=drink_ml, caffeine_consumed=caffeine_consumed, drink_hour=time_consumed)
     db.session.add(new_log)
     db.session.commit()
     flash("Drink logged!", 'success')
@@ -181,7 +186,7 @@ def leaderboard():
         ).join(
           Drinks, Drinks.drink_id == Drink_Ratings.drink_id
         ).filter(
-            Drinks.category == 'Energy'
+            Drinks.category.like('%Energy%')
         ).group_by(
             Drink_Ratings.drink_id
         ).order_by(
@@ -201,6 +206,21 @@ def leaderboard():
         ).order_by(
             desc('avg_rating')
         ).limit(10).all()
+
+    elif category == 'soft drink':
+        top_drinks = db.session.query(
+            Drink_Ratings.drink_id,
+            func.avg(Drink_Ratings.rating).label('avg_rating')
+        ).join(
+            Drinks, Drinks.drink_id == Drink_Ratings.drink_id 
+        ).filter(
+            Drinks.category == 'Soft Drink'
+        ).group_by(
+            Drink_Ratings.drink_id
+        ).order_by(
+            desc('avg_rating')
+        ).limit(10).all()
+
 
     elif category == 'brands':
             top_drinks = db.session.query(
@@ -241,12 +261,68 @@ def leaderboard():
                          leaderboard_data=leaderboard_data,
                          leadertype=category)
 
+def generate_caffeine_graph(caffeine_log, weight_kg, hours=12, step=0.5):
+    half_life = max(3.5, min(5 * (weight_kg / 70), 9))
+
+    all_times = []
+    all_levels = []
+    day_offset = 0
+
+    if not caffeine_log:
+        return times, levels, half_life
+
+    # earliest consumed drink
+    start_time = min(entry.drink_hour for entry in caffeine_log)
+
+    drinks_by_date = defaultdict(list)
+
+    for log in caffeine_log:
+        date_str = log.consumed_at.date()
+        drinks_by_date[date_str].append(log)
+
+    for date, drinks in sorted(drinks_by_date.items()):
+        t_step = 0.25  # 15 minutes
+        max_hour = max(d.drink_hour for d in drinks) + 12
+
+        times = [i * t_step for i in range(int(max_hour / t_step) + 1)]
+        levels = []
+
+        for t in times:
+            level = 0
+            for drink in drinks:
+                hours_since_drink = t - drink.drink_hour
+
+                if hours_since_drink >= 0:
+                    level += drink.caffeine_consumed * (0.5 ** (hours_since_drink / half_life))
+
+            levels.append(level)
+
+        # Offset each day cleanly
+        all_times.extend([t + day_offset for t in times])
+        all_levels.extend(levels)
+
+        day_offset += max_hour + 2  # visual gap between days
+
+    return all_times, all_levels
 
 @app.route("/recommendation", methods=["GET", "POST"])
 @login_required
 def recommendation():
     user = session['user_id']
-    
+    user_details = User_Details.query.filter_by(user_id=user).first()  
+    recommendation = []   
+
+    # max caffeine per day calculation
+    user_details.caffeine_max = float(user_details.weight) * 2.5
+    db.session.commit()  # commit update
+
+    with db.session.no_autoflush:
+        caffeine_log = Caffeine_Log.query.filter_by(user_id=user).all()
+
+    times, levels = generate_caffeine_graph(caffeine_log, float(user_details.weight) * 0.453592)
+
+    caffeine_graph = None
+
     if request.method == "POST":
         # get user inputs from form
         mood = request.form.get("mood")
@@ -317,10 +393,37 @@ def recommendation():
             if favored_flavor_list:
                 # filter drinks to match favored flavors
                 query = query.filter(Drinks.flavor.in_(favored_flavor_list))
-            
-        drinks = query.limit(3).all()
         
-        return render_template('recommend.html', active_tab='recommendation', recommendation=drinks)
+        result = query.all()
+        
+
+        if len(result) >= 3:
+            recommendation = random.sample(result, 3)
+        else:
+            recommendation = result
+
+         # Create Matplotlib figure
+        fig = Figure(figsize=(8, 3))
+        ax = fig.subplots()
+        ax.plot(times, levels, color='teal', marker='o', label='Caffeine Level')
+        ax.fill_between(times, levels, color='teal', alpha=0.2)
+        ax.set_title("Caffeine Half-Life Over Time")
+        ax.set_xlabel("Hours since first drink")
+        ax.set_ylabel("Caffeine remaining (mg)")
+        ax.set_ylim(bottom=0)
+        ax.grid(True, linestyle='--', alpha=0.5)
+        ax.legend()
+
+        # Save figure to PNG in memory
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", bbox_inches="tight")
+        buf.seek(0)
+        image_base64 = base64.b64encode(buf.getvalue()).decode('ascii')
+        buf.close()
+
+        caffeine_graph = Markup(f'<img src="data:image/png;base64,{image_base64}" class="img-fluid rounded shadow"/>')
+
+        return render_template('recommend.html', active_tab='recommendation', recommendation=recommendation, user_details=user_details, times=times, levels=levels, caffeine_graph=caffeine_graph)
 
     return render_template('recommend.html', active_tab='recommendation',  recommendation=None)
 
@@ -332,6 +435,32 @@ def accounts():
 
     # fetch caffeine logs
     logs = Caffeine_Log.query.filter_by(user_id=user_id).order_by(Caffeine_Log.consumed_at.desc()).all()
+
+     # Generate caffeine graph
+    if logs:
+        times, levels = generate_caffeine_graph(logs, float(user_details.weight) * 0.453592)
+        # Create Matplotlib figure
+        fig = Figure(figsize=(8, 3))
+        ax = fig.subplots()
+        ax.plot(times, levels, color='teal', marker='o', label='Caffeine Level')
+        ax.fill_between(times, levels, color='teal', alpha=0.2)
+        ax.set_title("How Long Does Caffeine Last in my Body?")
+        ax.set_xlabel("Hours since first drink")
+        ax.set_ylabel("Caffeine remaining (mg)")
+        ax.set_ylim(bottom=0)
+        ax.grid(True, linestyle='--', alpha=0.5)
+        ax.legend()
+
+        # Save figure to PNG in memory
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", bbox_inches="tight")
+        buf.seek(0)
+        image_base64 = base64.b64encode(buf.getvalue()).decode('ascii')
+        buf.close()
+
+        caffeine_graph = Markup(f'<img src="data:image/png;base64,{image_base64}" class="img-fluid rounded shadow"/>')
+    else:
+        caffeine_graph = None
     
     # fetch favorite drinks
     favorites = Drink_Favorites.query.filter_by(user_id=user_id).join(Drinks).all()
@@ -347,7 +476,7 @@ def accounts():
 
     week_logs = [ lg for lg in logs if week_start <= lg.consumed_at.date() <= week_end]
 
-    return render_template('accounts.html', active_tab='accounts', user_details=user_details, caffeine_logs=logs, favorites=favorites, today=today, week_logs=week_logs)
+    return render_template('accounts.html', active_tab='accounts', user_details=user_details, caffeine_logs=logs, favorites=favorites, today=today, week_logs=week_logs, caffeine_graph=caffeine_graph)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():

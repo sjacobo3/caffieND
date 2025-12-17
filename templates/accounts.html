@@ -113,10 +113,13 @@
                 </div>
             </div>
             {% else %}
-            <p class="text-muted">No caffeine logged yet.</p>
+            <p class="text-muted text-center">No caffeine logged yet.</p>
             {% endif %}
         </div>
     </div>
+
+</div>
+
 
     <!-- favorites -->
     <div class="tab-pane fade" id="favorites">
@@ -150,6 +153,7 @@
             <a href="{{ url_for('update_profile') }}" class="btn btn-primary">Set Up Profile</a>
             {% endif %}
         </div>
+        
     </div>
 </div>
 
