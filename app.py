@@ -127,7 +127,6 @@ def log_drink():
     caffeine_consumed = (drink.caffeine_amt / drink.volume) * int(drink_ml)
     time_consumed = drink_hour
 
-
     new_log = Caffeine_Log(user_id=user_id, drink_id=drink_id, drink_ml=drink_ml, caffeine_consumed=caffeine_consumed, drink_hour=time_consumed)
     db.session.add(new_log)
     db.session.commit()

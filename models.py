@@ -81,6 +81,7 @@ class Caffeine_Log(db.Model):
     drink_id = db.Column(db.Integer, db.ForeignKey('drinks.drink_id'))
     drink_ml = db.Column(db.Integer)
     caffeine_consumed = db.Column(db.Integer)
+    drink_hour = db.Column(db.Integer)
     consumed_at = db.Column(db.DateTime, default=datetime.now())
 
     user = db.relationship('Users', backref=db.backref('caffeine_logs'))
