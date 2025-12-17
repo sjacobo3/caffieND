@@ -151,6 +151,9 @@
                                 </div>
 
                                 <div class="d-grid">
+                                    {% if drink.exceeds_daily_max %}
+                                        <span class="warning">Exceeds your daily caffeine limit</span>
+                                    {% endif %}
                                     <button type="submit" class="btn btn-success">✓ Log This Drink</button>
                                 </div>
                             </form>

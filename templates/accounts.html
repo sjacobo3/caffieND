@@ -30,19 +30,44 @@
             <h3>Your Caffeine Log</h3>
             {% if caffeine_logs %}
             <ul class="list-group">
+                <!-- Column Titles -->
+                <li class="list-group-item d-flex justify-content-between fw-bold border-bottom">
+                    <span>Date</span>
+                    <span>Drink</span>
+                    <span>Caffeine (mg)</span>
+                    <span>Time</span>
+                </li>
                 {% for log in caffeine_logs %}
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>{{ log.consumed_at.strftime("%m-%d-%Y") }}</span>
-                    <span>{{ log.drink.name }}</span>
-                    <span>{{ log.caffeine_consumed }}</span>
+                <li class="list-group-item d-flex justify-content-between border-bottom align-items-start">
+                    <span class="flex-fill">{{ log.consumed_at.strftime("%m-%d-%Y") }}</span>
+                    <span class="flex-fill text-wrap text-truncate">{{ log.drink.name }}</span>
+                    <span class="flex-fill text-center">{{ log.caffeine_consumed }}</span>
+                    <span class="flex-fill text-end">
+                        {% set hour = log.drink_hour %}
+                        {% set display_hour = hour % 12 %}
+                        {% if display_hour == 0 %}
+                            {% set display_hour = 12 %}
+                        {% endif %}
+                        {% set ampm = 'AM' if hour < 12 else 'PM' %}
+                        {{ display_hour }}:00 {{ ampm }}
+                    </span>
                 </li>
                 {% endfor %}
             </ul>
+
+            <!-- Server-side graph -->
+            <div class="mt-4 text-center">
+                {{ caffeine_graph|safe }}
+            </div>
+
             {% else %}
-            <p class="text-muted">No caffeine logged yet.</p>
+            <p class="text-muted text-center">No caffeine logged yet.</p>
             {% endif %}
         </div>
     </div>
+
+</div>
+
 
     <!-- favorites -->
     <div class="tab-pane fade" id="favorites">
@@ -76,6 +101,7 @@
             <a href="{{ url_for('update_profile') }}" class="btn btn-primary">Set Up Profile</a>
             {% endif %}
         </div>
+        
     </div>
 </div>
 
