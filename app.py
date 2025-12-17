@@ -104,18 +104,18 @@ def home():
     drink_name = request.args.get('drink_name', default="", type=str)
     calorie_min = request.args.get('calorie_min', type=int)
     calorie_max = request.args.get('calorie_max', type=int)
-    caffiene_min = request.args.get('caffiene_min', type=int)
-    caffiene_max = request.args.get('caffiene_max', type=int)
+    caffeine_min = request.args.get('caffeine_min', type=int)
+    caffeine_max = request.args.get('caffeine_max', type=int)
 
     #check for inputs 
     if calorie_min == None: 
         calorie_min = 0
     if calorie_max == None: 
         calorie_max = 1000000
-    if caffiene_min == None: 
-        caffiene_min = 0
-    if caffiene_max == None: 
-        caffiene_max = 1000000
+    if caffeine_min == None: 
+        caffeine_min = 0
+    if caffeine_max == None: 
+        caffeine_max = 1000000
 
     query = db.session.query(Drinks)
     if drink_name:
@@ -125,8 +125,8 @@ def home():
     query = query.filter(
     Drinks.calories >= calorie_min,
     Drinks.calories <= calorie_max,
-    Drinks.caffeine_amt >= caffiene_min,
-    Drinks.caffeine_amt <= caffiene_max
+    Drinks.caffeine_amt >= caffeine_min,
+    Drinks.caffeine_amt <= caffeine_max
     )
 
     # pagination
@@ -533,4 +533,4 @@ def shutdown_session(exception=None):
 
 if __name__ == '__main__':
     app.debug = True
-    app.run(host='0.0.0.0', port=5030)
+    app.run(host='0.0.0.0', port=5029)
